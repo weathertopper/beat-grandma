@@ -17,6 +17,12 @@ Given a board and a set of in-hand tiles, calculate the word and position of the
 
 **Python3 CLI**
 
+- `new-game NAME`: Create new board for new game
+- `delete-game NAME`: Delete game
+- `set-word NAME POSITION WORD`: Update board NAME at POSITION with WORD
+- `remove-word NAME POSITION WORD`: Remove word, if it matches
+- `best-word NAME LETTERS`
+
 ---
 
 **Algorithmic Functions and Flow**
@@ -27,3 +33,4 @@ Given a board and a set of in-hand tiles, calculate the word and position of the
 
 - Opening move (empty board) special case?s
 - Blank tile
+- If board has non-legit word set, `best-word` will always return `invalid board`
