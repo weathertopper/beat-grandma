@@ -66,6 +66,16 @@ Algorithm(s)
 
 ## Edge cases
 
-- Opening move (empty board) special case?s
+- The definition of an "edge" case-- when two words run parallel to each other and all touching tiles are legitimate
+- Opening move (empty board) special case?
 - Blank tile
 - If board has non-legit word set, `best-word` will always return `invalid board`
+- Lookup "bingos"
+
+---
+
+### How to run
+
+`py beat-grandma.py <command> --game <game> --letters <letters> --position <position> --word <word>`
+
+^^ these are all of the flags
