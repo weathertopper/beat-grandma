@@ -21,46 +21,50 @@ Given a board and a set of in-hand tiles, calculate the word and position of the
 - `delete-game NAME`: Delete game
 - `set-word NAME POSITION WORD`: Update board NAME at POSITION with WORD
 - `remove-word NAME POSITION WORD`: Remove word, if it matches
-- `best-word NAME LETTERS`: Return best word, word score, and position
+- `best-move NAME LETTERS`: Return best word, word score, and position
 
 ---
 
 ### Algorithmic Functions and Flow
 
 
-#### `best-word`
+#### `best-move`
 
 - `best-word NAME LETTERS`: Given game `NAME` and tiles `LETTERS`, scan the board to find the best possible move.
 - "Best move" meaning the move that reaps the greatest score.
 
 Algorithm(s)
 
+
+`best-move`
+
 ```
-letters = letters in hand
-for (each row and column){
-    curr= current row or column
-    curr_words = collect all words from curr
-    possible_words = all words from dictionary made out of curr_words + letters
-    for (each possible_word){
-        
-    }
-}
+1:  letters = letters in hand
+2:  best_word = nil
+3:  best_word_position = nil
+4:  best_word_score = 0
+5:  for (each row and column){
+6:      curr= current row or column
+7:      curr_words = collect all words from curr
+8:      possible_words = all words from dictionary made out of curr_words + letters
+9:      for (each possible_word){
+10:         position = position of this possible_word
+11:         if (boardValid){ // if curr and all perpendicular rows/columns are still valid when possible_word applied
+12:             points = points awarded for word, including special tile scores and perpendicular word scores
+13:             if ( points > best_word_score ){
+14:                 best_word_score = points
+15:                 best_word_position = position
+16:                 best_word = possible_word
+17:             }
+18:         }
+19:     }
+20: }
+21: return best_word, best_word_position, best_word_score
 ```
-
-
-
-- Create new game
-
-while (game)
-- Set word played by opponent
-  - Should fail if board not valid
-- Get best word
-- Set best word
-end
 
 ---
 
-## Edge cases:
+## Edge cases
 
 - Opening move (empty board) special case?s
 - Blank tile
