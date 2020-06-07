@@ -54,6 +54,15 @@ def printGame(game):
     board.insert(0, header_row)
     print(boardToPrettyString(board))
 
+def setWord(game, letters, position, word):
+    click.echo(" SET WORD \n game: {}\n letters: {}\n position: {}\n word: {}".format(game, letters, position, word))
+
+def removeWord(game, letters, position, word):
+    click.echo(" REMOVE WORD \n game: {}\n letters: {}\n position: {}\n word: {}".format(game, letters, position, word))
+
+def bestMove(game, letters, position, word):
+    click.echo(" BEST MOVE \n game: {}\n letters: {}\n position: {}\n word: {}".format(game, letters, position, word))
+
 
 # CLI INPUTS
 @click.command()
@@ -67,15 +76,20 @@ def printGame(game):
 def main(command, game, letters, position, word):
     if command == "test":
         testInput(command, game, letters, position, word)
-    elif command == "create":
+    elif command == "create-game":
         createGame(game)
-    elif command == "delete": 
+    elif command == "delete-game": 
         deleteGame(game)
-    elif command == "print":
+    elif command == "print-game":
         printGame(game)
+    elif command == "set-word":
+        setWord(game, letters, position, word)
+    elif command == "remove-word":
+        removeWord(game, letters, position, word)
+    elif command == "best-move":
+        bestMove(game, letters, position, word)
     else:
         print ("default")
-        # click.echo(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}".format(command, game, letters, position, word))
 
 if __name__ == "__main__":
     main()
