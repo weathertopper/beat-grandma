@@ -2,7 +2,6 @@ import click
 import shutil
 import os
 import string
-import pprint
 
 saved_games_dir="games"
 
