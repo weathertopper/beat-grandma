@@ -5,32 +5,87 @@ import string
 
 saved_games_dir="games"
 
-def testInput(command, game, letters, position, word):
-    click.echo(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}".format(command, game, letters, position, word))
+def getGameFilePath(game):
+    return os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
+
+def getTemplateFilePath():
+    return os.path.join(os.getcwd(), saved_games_dir, "_template.csv")
+
+def validateDirection(direction):
+    if direction == "vertical" or direction == "v" or direction == "horizontal" or direction == "h":
+        return True
+    print("The direction {} is invalid. Valid directions are <vertical> <v> <horizontal> <h>".format(direction))
+    return False
+
+def validateGame(game):
+    game_file = getGameFilePath(game)
+    if os.path.exists(game_file):
+        return True
+    print("The game file {} does not exist".format(game_file))
+    return False
+
+def validatePositionLength(position):
+    return len(position) == 2 or len(position) == 3
+
+def getPositionRow(position): #i.e. the number
+    if validatePositionLength(position):
+        return position[1:]
+    return False
+
+def getPositionCol(position): #i.e. the letter
+    if validatePositionLength(position):
+        return position[0]
+    return False
+
+def validatePositionRow(row):
+    rowAsInt = -1
+    try:
+        rowAsInt = int(row)
+        return 0 <= rowAsInt <= 14
+    except:
+        return False
+
+def validatePositionCol(col):
+    possibleCols = "abcdefghijklmno"
+    return col in possibleCols
+
+def validatePosition(position):
+    col = getPositionCol(position)
+    row = getPositionRow(position)
+    if row and col:
+        return validatePositionCol(col) and validatePositionRow(row)
+    return False
+
+def readGameAtPosition(game, position):
+    return False
+
+def validateWordPosition(game, position, word, direction):
+    gameValid = validateGame(game)
+    directionValid = validateDirection(direction)
+    return False
+
+def testInput(command, game, letters, position, word, direction):
+    click.echo(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(command, game, letters, position, word, direction))
 
 def createGame(game):
-    template_file = os.path.join(os.getcwd(), saved_games_dir, "_template.csv")
-    copy_file = os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
+    template_file = getTemplateFilePath()
+    copy_file = getGameFilePath(game)
     shutil.copyfile(template_file, copy_file)
 
 def deleteGame(game):
-    game_file = os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
-    if os.path.exists(game_file):
+    if validateGame(game):
+        game_file = getGameFilePath(game)
         os.remove(game_file)
-    else:
-        print("The file {} does not exist".format(game_file))
 
-def readBoard(game):
-    game_file = os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
-    board=[]
-    if os.path.exists(game_file):
-        f = open(game_file, "r")
+def readFullBoard(game):
+    if validateGame(game):
+        board=[]
+        f = open(getGameFilePath(game), "r")
         board_as_string = f.read()
         board_by_row = board_as_string.split("\n")
         for r in board_by_row:
             board.append(r.split(","))
         return board
-    print("The file {} does not exist".format(game_file))
     return ""
 
 def boardToPrettyString(board):
@@ -43,7 +98,7 @@ def boardToPrettyString(board):
     return '\n'.join(table)
 
 def printGame(game):
-    board = readBoard(game)
+    board = readFullBoard(game)
     if board == "":
         return
     header_row = list(string.ascii_lowercase)[:15]
@@ -53,14 +108,16 @@ def printGame(game):
     board.insert(0, header_row)
     print(boardToPrettyString(board))
 
-def setWord(game, letters, position, word):
-    click.echo(" SET WORD \n game: {}\n letters: {}\n position: {}\n word: {}".format(game, letters, position, word))
+def setWord(game, letters, position, word, direction):
+    dv = validateDirection(direction)
+    click.echo(" SET WORD \n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(game, letters, position, word, direction))
 
-def removeWord(game, letters, position, word):
-    click.echo(" REMOVE WORD \n game: {}\n letters: {}\n position: {}\n word: {}".format(game, letters, position, word))
+def removeWord(game, letters, position, word, direction):
+    dv = validateDirection(direction)
+    click.echo(" REMOVE WORD \n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(game, letters, position, word, direction))
 
-def bestMove(game, letters, position, word):
-    click.echo(" BEST MOVE \n game: {}\n letters: {}\n position: {}\n word: {}".format(game, letters, position, word))
+def bestMove(game, letters, position):
+    click.echo(" BEST MOVE \n game: {}\n letters: {}\n position: {}".format(game, letters, position))
 
 
 # CLI INPUTS
@@ -70,11 +127,12 @@ def bestMove(game, letters, position, word):
 @click.option('--letters', '-l')
 @click.option('--position', '-p')
 @click.option('--word', '-w')
+@click.option('--direction', '-d')
 
 # DRIVER
-def main(command, game, letters, position, word):
+def main(command, game, letters, position, word, direction):
     if command == "test":
-        testInput(command, game, letters, position, word)
+        testInput(command, game, letters, position, word, direction)
     elif command == "create-game":
         createGame(game)
     elif command == "delete-game": 
@@ -82,11 +140,11 @@ def main(command, game, letters, position, word):
     elif command == "print-game":
         printGame(game)
     elif command == "set-word":
-        setWord(game, letters, position, word)
+        setWord(game, letters, position, word, direction)
     elif command == "remove-word":
-        removeWord(game, letters, position, word)
+        removeWord(game, letters, position, word, direction)
     elif command == "best-move":
-        bestMove(game, letters, position, word)
+        bestMove(game, letters)
     else:
         print ("default")
 
