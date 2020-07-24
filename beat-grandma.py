@@ -65,51 +65,29 @@ def validatePosition(position):
         return validatePositionCol(col) and validatePositionRow(row)
     return False
 
-def incrementRow(row): # assumes row is valid
-    next_row = int(row) + 1
-    if not validatePositionRow(next_row):
-        return False
-    return next_row
-
-def decrementRow(row): # assumes row is valid
-    prev_row = int(row) -1
-    if not validatePositionRow(prev_row):
-        return False
-    return prev_row
-
-def incrementCol(col): # assumes col is valid
-    next_col_index = possibleCols.find(col) + 1
-    if next_col_index < len(possibleCols):
-        return possibleCols[next_col_index]
-    return False
-
-def decrementCol(col): # assumes col is valid
-    prev_col_index = possibleCols.find(col) - 1
-    if prev_col_index > -1:
-        return possibleCols[prev_col_index]
-    return False
-
 def positionMoveUp(position): # returns next position if valid, else False (assumes position is valid) 
-    up_row = decrementRow(getPositionRow(position))
-    if up_row:
+    up_row = int(getPositionRow(position))-1
+    if validatePositionRow(up_row):
         return buildPosition(getPositionCol(position), up_row)
     return False
 
 def positionMoveDown(position): # returns next position if valid, else False (assumes position is valid)
-    down_row = incrementRow(getPositionRow(position))
-    if down_row:
+    down_row = int(getPositionRow(position))+1
+    if validatePositionRow(down_row):
         return buildPosition(getPositionCol(position), down_row)
     return False
 
 def positionMoveLeft(position): # returns next position if valid, else False (assumes position is valid)
-    left_col = decrementCol(getPositionCol(position))
-    if left_col:
+    prev_col_index = possibleCols.find(col) - 1
+    if prev_col_index > -1:
+        left_col = possibleCols[prev_col_index]
         return buildPosition(left_col, getPositionRow(position))
     return False
 
 def positionMoveRight(position): # returns next position if valid, else False (assumes position is valid)
-    right_col = incrementCol(getPositionCol(position))
-    if right_col:
+    next_col_index = possibleCols.find(getPositionCol(position)) + 1
+    if next_col_index < len(possibleCols):    
+        right_col = possibleCols[next_col_index]
         return buildPosition(right_col, getPositionRow(position))
     return False
 
