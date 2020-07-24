@@ -85,5 +85,6 @@ Algorithm(s)
 
 ### TODO
 
-- Configurable special tiles (and how to print their positions) from file
+- Special tile config and print
+- Tile value config and print
 - Best move
