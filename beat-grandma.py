@@ -4,6 +4,7 @@ import os
 import string
 
 saved_games_dir="games"
+possibleCols = "abcdefghijklmno"
 
 def getGameFilePath(game):
     return os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
@@ -16,6 +17,12 @@ def validateDirection(direction):
         return True
     print("The direction {} is invalid. Valid directions are <vertical> <v> <horizontal> <h>".format(direction))
     return False
+
+def directionIsHorizontal(direction): # otherwise it's vertical
+    return direction == "horizontal" or direction == "h"
+
+def validateWord(word):
+    return isinstance(word, str) and len(word) > 0
 
 def validateGame(game):
     game_file = getGameFilePath(game)
@@ -37,16 +44,18 @@ def getPositionCol(position): #i.e. the letter
         return position[0]
     return False
 
+def buildPosition(col, row): # assumes col and row are valid
+    return col + str(row)
+
 def validatePositionRow(row):
     rowAsInt = -1
     try:
         rowAsInt = int(row)
-        return 0 <= rowAsInt <= 14
+        return 1 <= rowAsInt <= 15
     except:
         return False
 
 def validatePositionCol(col):
-    possibleCols = "abcdefghijklmno"
     return col in possibleCols
 
 def validatePosition(position):
@@ -56,16 +65,56 @@ def validatePosition(position):
         return validatePositionCol(col) and validatePositionRow(row)
     return False
 
-def readGameAtPosition(game, position):
+def incrementRow(row): # assumes row is valid
+    next_row = int(row) + 1
+    if not validatePositionRow(next_row):
+        return False
+    return next_row
+
+def decrementRow(row): # assumes row is valid
+    prev_row = int(row) -1
+    if not validatePositionRow(prev_row):
+        return False
+    return prev_row
+
+def incrementCol(col): # assumes col is valid
+    next_col_index = possibleCols.find(col) + 1
+    if next_col_index < len(possibleCols):
+        return possibleCols[next_col_index]
     return False
 
-def validateWordPosition(game, position, word, direction):
-    gameValid = validateGame(game)
-    directionValid = validateDirection(direction)
+def decrementCol(col): # assumes col is valid
+    prev_col_index = possibleCols.find(col) - 1
+    if prev_col_index > -1:
+        return possibleCols[prev_col_index]
+    return False
+
+def positionMoveUp(position): # returns next position if valid, else False (assumes position is valid) 
+    up_row = decrementRow(getPositionRow(position))
+    if up_row:
+        return buildPosition(getPositionCol(position), up_row)
+    return False
+
+def positionMoveDown(position): # returns next position if valid, else False (assumes position is valid)
+    down_row = incrementRow(getPositionRow(position))
+    if down_row:
+        return buildPosition(getPositionCol(position), down_row)
+    return False
+
+def positionMoveLeft(position): # returns next position if valid, else False (assumes position is valid)
+    left_col = decrementCol(getPositionCol(position))
+    if left_col:
+        return buildPosition(left_col, getPositionRow(position))
+    return False
+
+def positionMoveRight(position): # returns next position if valid, else False (assumes position is valid)
+    right_col = incrementCol(getPositionCol(position))
+    if right_col:
+        return buildPosition(right_col, getPositionRow(position))
     return False
 
 def testInput(command, game, letters, position, word, direction):
-    click.echo(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(command, game, letters, position, word, direction))
+    print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(command, game, letters, position, word, direction))
 
 def createGame(game):
     template_file = getTemplateFilePath()
@@ -104,20 +153,51 @@ def printGame(game):
     header_row = list(string.ascii_lowercase)[:15]
     header_row.insert(0, "")
     for i in range(len(board)):
-        board[i].insert(0, i)
+        board[i].insert(0, i+1)
     board.insert(0, header_row)
     print(boardToPrettyString(board))
 
-def setWord(game, letters, position, word, direction):
-    dv = validateDirection(direction)
-    click.echo(" SET WORD \n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(game, letters, position, word, direction))
+def setLetterOnBoardAtPosition(letter, board, position):
+    row_index = int(getPositionRow(position))-1 # row starts at 1, index starts at 0
+    col_index = possibleCols.find(getPositionCol(position))
+    board[row_index][col_index] = letter
+    return board
 
-def removeWord(game, letters, position, word, direction):
-    dv = validateDirection(direction)
-    click.echo(" REMOVE WORD \n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(game, letters, position, word, direction))
+def setWord(game, position, word, direction):
+    game_valid = validateGame(game)
+    direction_valid = validateDirection(direction)
+    position_valid = validatePosition(position)
+    word_valid = validateWord(word)
+    if not (game_valid and direction_valid and position_valid and word_valid):
+        return False
+    board = readFullBoard(game)
+    curr_pos = position
+    for i in range(len(word)):
+        board = setLetterOnBoardAtPosition(word[i], board, curr_pos)
+        if i != len(word)-1: # don't do math for next position if last letter set
+            next_pos = positionMoveRight(curr_pos) if directionIsHorizontal(direction) else positionMoveDown(curr_pos)
+            if not (next_pos and validatePosition(next_pos)):
+                 print(" ERROR: Failed to set word {} at position {} in direction {} for game {}\n".format(word, position, direction, game))
+                 return False
+            curr_pos = next_pos
+    writeBoardToFile(game, board)
+    print(" Set word {} at position {} in direction {} for game {}\n".format(word, position, direction, game))
 
-def bestMove(game, letters, position):
-    click.echo(" BEST MOVE \n game: {}\n letters: {}\n position: {}".format(game, letters, position))
+def writeBoardToFile(game, board):
+    board_as_string = ""
+    for row in board:
+        board_as_string += ",".join(row)
+        board_as_string += "\n"
+    board_as_string = board_as_string.rstrip()
+    f = open(getGameFilePath(game), "w")
+    f.write(board_as_string)
+    f.close()
+
+def printSpecials(): #TODO
+    print(" PRINT SPECIALS \n")
+
+def bestMove(game, letters, position): #TODO
+    print(" BEST MOVE \n game: {}\n letters: {}\n position: {}".format(game, letters, position))
 
 
 # CLI INPUTS
@@ -133,16 +213,16 @@ def bestMove(game, letters, position):
 def main(command, game, letters, position, word, direction):
     if command == "test":
         testInput(command, game, letters, position, word, direction)
-    elif command == "create-game":
+    elif command == "new-game":
         createGame(game)
     elif command == "delete-game": 
         deleteGame(game)
     elif command == "print-game":
         printGame(game)
     elif command == "set-word":
-        setWord(game, letters, position, word, direction)
-    elif command == "remove-word":
-        removeWord(game, letters, position, word, direction)
+        setWord(game, position, word, direction)
+    elif command == "print-specials":
+        printSpecials()
     elif command == "best-move":
         bestMove(game, letters)
     else:

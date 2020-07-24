@@ -17,11 +17,11 @@ Given a board and a set of in-hand tiles, calculate the word and position of the
 
 ### Python3 CLI
 
-- `new-game NAME`: Create new board for new game
-- `delete-game NAME`: Delete game
-- `set-word NAME POSITION WORD`: Update board NAME at POSITION with WORD
-- `remove-word NAME POSITION WORD`: Remove word, if it matches
-- `best-move NAME LETTERS`: Return best word, word score, and position
+- `new-game -g NAME`: Create new board for new game
+- `delete-game -g NAME`: Delete game
+- `set-word -g NAME -p POSITION -d DIRECTION -w WORD`: Update board NAME at POSITION with WORD
+- `best-move -g NAME -l LETTERS`: Return best word, word score, and position
+- `print-game -g NAME`: Print active board game (pretty)
 
 ---
 
@@ -69,6 +69,7 @@ Algorithm(s)
 - The definition of an "edge" case-- when two words run parallel to each other and all touching tiles are legitimate
 - Opening move (empty board) special case?
 - Blank tile
+- special tiles (less edge case, need to program in by position)
 - If board has non-legit word set, `best-word` will always return `invalid board`
 - Lookup "bingos"
 
@@ -76,6 +77,13 @@ Algorithm(s)
 
 ### How to run
 
-`py beat-grandma.py <command> --game <game> --letters <letters> --position <position> --word <word>`
+`py beat-grandma.py <command> --game <game> --letters <letters> --position <position> --word <word> --direction <direction>`
 
 ^^ these are all of the flags
+
+---
+
+### TODO
+
+- Configurable special tiles (and how to print their positions) from file
+- Best move
