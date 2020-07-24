@@ -6,20 +6,11 @@ import string
 saved_games_dir="games"
 possibleCols = "abcdefghijklmno"
 
-def getGameFilePath(game):
-    return os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
-
-def getTemplateFilePath():
-    return os.path.join(os.getcwd(), saved_games_dir, "_template.csv")
-
 def validateDirection(direction):
     if direction == "vertical" or direction == "v" or direction == "horizontal" or direction == "h":
         return True
     print("The direction {} is invalid. Valid directions are <vertical> <v> <horizontal> <h>".format(direction))
     return False
-
-def directionIsHorizontal(direction): # otherwise it's vertical
-    return direction == "horizontal" or direction == "h"
 
 def validateWord(word):
     return isinstance(word, str) and len(word) > 0
@@ -33,19 +24,6 @@ def validateGame(game):
 
 def validatePositionLength(position):
     return len(position) == 2 or len(position) == 3
-
-def getPositionRow(position): #i.e. the number
-    if validatePositionLength(position):
-        return position[1:]
-    return False
-
-def getPositionCol(position): #i.e. the letter
-    if validatePositionLength(position):
-        return position[0]
-    return False
-
-def buildPosition(col, row): # assumes col and row are valid
-    return col + str(row)
 
 def validatePositionRow(row):
     rowAsInt = -1
@@ -64,6 +42,28 @@ def validatePosition(position):
     if row and col:
         return validatePositionCol(col) and validatePositionRow(row)
     return False
+
+def getGameFilePath(game):
+    return os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
+
+def getTemplateFilePath():
+    return os.path.join(os.getcwd(), saved_games_dir, "_template.csv")
+    
+def getPositionRow(position): #i.e. the number
+    if validatePositionLength(position):
+        return position[1:]
+    return False
+
+def getPositionCol(position): #i.e. the letter
+    if validatePositionLength(position):
+        return position[0]
+    return False
+
+def buildPosition(col, row): # assumes col and row are valid
+    return col + str(row)
+
+def directionIsHorizontal(direction): # otherwise it's vertical
+    return direction == "horizontal" or direction == "h"
 
 def positionMoveUp(position): # returns next position if valid, else False (assumes position is valid) 
     up_row = int(getPositionRow(position))-1
