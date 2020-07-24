@@ -3,6 +3,7 @@ import shutil
 import os
 import string
 
+config_dir = "config"
 saved_games_dir="games"
 possibleCols = "abcdefghijklmno"
 
@@ -47,8 +48,8 @@ def getGameFilePath(game):
     return os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
 
 def getTemplateFilePath():
-    return os.path.join(os.getcwd(), saved_games_dir, "_template.csv")
-    
+    return os.path.join(os.getcwd(), config_dir, "_template.csv")
+
 def getPositionRow(position): #i.e. the number
     if validatePositionLength(position):
         return position[1:]
