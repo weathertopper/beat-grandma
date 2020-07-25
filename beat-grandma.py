@@ -5,7 +5,9 @@ import string
 
 config_dir = "config"
 saved_games_dir="games"
-possibleCols = "abcdefghijklmno"
+tile_values_file_name="_wwf_tile_values.csv"
+special_tiles_file_name="_wwf_special_tiles.csv"
+possible_cols = "abcdefghijklmno"
 
 def validateDirection(direction):
     if direction == "vertical" or direction == "v" or direction == "horizontal" or direction == "h":
@@ -35,7 +37,7 @@ def validatePositionRow(row):
         return False
 
 def validatePositionCol(col):
-    return col in possibleCols
+    return col in possible_cols
 
 def validatePosition(position):
     col = getPositionCol(position)
@@ -49,6 +51,12 @@ def getGameFilePath(game):
 
 def getTemplateFilePath():
     return os.path.join(os.getcwd(), config_dir, "_template.csv")
+
+def getTileValuesFilePath():
+    return os.path.join(os.getcwd(), config_dir, tile_values_file_name)
+
+def getSpecialTilesFilePath():
+    return os.path.join(os.getcwd(), config_dir, special_tiles_file_name)
 
 def getPositionRow(position): #i.e. the number
     if validatePositionLength(position):
@@ -79,16 +87,16 @@ def positionMoveDown(position): # returns next position if valid, else False (as
     return False
 
 def positionMoveLeft(position): # returns next position if valid, else False (assumes position is valid)
-    prev_col_index = possibleCols.find(col) - 1
+    prev_col_index = possible_cols.find(col) - 1
     if prev_col_index > -1:
-        left_col = possibleCols[prev_col_index]
+        left_col = possible_cols[prev_col_index]
         return buildPosition(left_col, getPositionRow(position))
     return False
 
 def positionMoveRight(position): # returns next position if valid, else False (assumes position is valid)
-    next_col_index = possibleCols.find(getPositionCol(position)) + 1
-    if next_col_index < len(possibleCols):    
-        right_col = possibleCols[next_col_index]
+    next_col_index = possible_cols.find(getPositionCol(position)) + 1
+    if next_col_index < len(possible_cols):    
+        right_col = possible_cols[next_col_index]
         return buildPosition(right_col, getPositionRow(position))
     return False
 
@@ -105,6 +113,15 @@ def deleteGame(game):
         game_file = getGameFilePath(game)
         os.remove(game_file)
 
+def readEmptyBoard():
+    board=[]
+    f = open(getTemplateFilePath(), "r")
+    board_as_string = f.read()
+    board_by_row = board_as_string.split("\n")
+    for r in board_by_row:
+        board.append(r.split(","))
+    return board
+
 def readFullBoard(game):
     if validateGame(game):
         board=[]
@@ -116,6 +133,38 @@ def readFullBoard(game):
         return board
     return ""
 
+def readTileValuesAsDict():
+    tile_values = dict()
+    f = open(getTileValuesFilePath(), "r")
+    tile_values_as_string = f.read()
+    tile_values_by_row = tile_values_as_string.split("\n")
+    for r in tile_values_by_row:
+        tile_val = r.split(",")
+        tile_values[tile_val[0]] = tile_val[1]
+    return tile_values
+
+def specialStringToCharacter(special_string):
+    special_characters = { 
+        "tw": "T",
+        "tl" : "t",
+        "dw" : "D",
+        "dl" : "d",
+        "st" : "S"
+    }
+    return special_characters[special_string]
+
+def readSpecialTilesAsDict():
+    special_tiles = dict()
+    f = open(getSpecialTilesFilePath(), "r")
+    special_tiles_as_string = f.read()
+    special_tiles_by_row = special_tiles_as_string.split("\n")
+    for r in special_tiles_by_row:
+        position_special = r.split(",")
+        position = position_special[0]
+        special_char = specialStringToCharacter(position_special[1])
+        special_tiles[position] = special_char
+    return special_tiles
+
 def boardToPrettyString(board):
     # script kiddie!
     # https://stackoverflow.com/a/13214945
@@ -125,10 +174,7 @@ def boardToPrettyString(board):
     table = [fmt.format(*row) for row in s]
     return '\n'.join(table)
 
-def printGame(game):
-    board = readFullBoard(game)
-    if board == "":
-        return
+def printBoard(board):
     header_row = list(string.ascii_lowercase)[:15]
     header_row.insert(0, "")
     for i in range(len(board)):
@@ -136,9 +182,15 @@ def printGame(game):
     board.insert(0, header_row)
     print(boardToPrettyString(board))
 
+def printGame(game):
+    board = readFullBoard(game)
+    if board == "":
+        return
+    printBoard(board)
+
 def setLetterOnBoardAtPosition(letter, board, position):
     row_index = int(getPositionRow(position))-1 # row starts at 1, index starts at 0
-    col_index = possibleCols.find(getPositionCol(position))
+    col_index = possible_cols.find(getPositionCol(position))
     board[row_index][col_index] = letter
     return board
 
@@ -172,15 +224,22 @@ def writeBoardToFile(game, board):
     f.write(board_as_string)
     f.close()
 
-def printSpecialTiles(): #TODO
-    print(" PRINT SPECIALS \n")
+def printSpecialTiles(): 
+    board = readEmptyBoard();
+    special_tiles = readSpecialTilesAsDict()
+    for pos, char in special_tiles.items():
+        setLetterOnBoardAtPosition(char, board, pos)
+    printBoard(board)
+    
 
 def printTileValues(): #TODO
-    print (" PRINT TILE VALUES \n")
+    tile_values_dict = readTileValuesAsDict()
+    print ("TILE VALUES")
+    for t, v in tile_values_dict.items():
+        print(t + " : " + v)
 
 def bestMove(game, letters, position): #TODO
     print(" BEST MOVE \n game: {}\n letters: {}\n position: {}".format(game, letters, position))
-
 
 # CLI INPUTS
 @click.command()
@@ -203,8 +262,10 @@ def main(command, game, letters, position, word, direction):
         printGame(game)
     elif command == "set-word":
         setWord(game, position, word, direction)
-    elif command == "print-specials":
-        printSpecials()
+    elif command == "print-special-tiles":
+        printSpecialTiles()
+    elif command == "print-tile-values":
+        printTileValues()
     elif command == "best-move":
         bestMove(game, letters)
     else:
