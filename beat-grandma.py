@@ -68,6 +68,9 @@ def getPositionCol(position): #i.e. the letter
         return position[0].lower()
     return False
 
+def getPositionColIndex(position): #i.e. the index of the letter
+    return possible_cols.find(getPositionCol(position))
+
 def buildPosition(col, row): # assumes col and row are valid
     return col + str(row)
 
@@ -87,14 +90,14 @@ def positionMoveDown(position): # returns next position if valid, else False (as
     return False
 
 def positionMoveLeft(position): # returns next position if valid, else False (assumes position is valid)
-    prev_col_index = possible_cols.find(col) - 1
+    prev_col_index = getPositionColIndex(position) - 1
     if prev_col_index > -1:
         left_col = possible_cols[prev_col_index]
         return buildPosition(left_col, getPositionRow(position))
     return False
 
 def positionMoveRight(position): # returns next position if valid, else False (assumes position is valid)
-    next_col_index = possible_cols.find(getPositionCol(position)) + 1
+    next_col_index = getPositionColIndex(position) + 1
     if next_col_index < len(possible_cols):    
         right_col = possible_cols[next_col_index]
         return buildPosition(right_col, getPositionRow(position))
@@ -102,6 +105,8 @@ def positionMoveRight(position): # returns next position if valid, else False (a
 
 def testInput(command, game, letters, position, word, direction):
     print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(command, game, letters, position, word, direction))
+    board = readFullBoard(game)
+    print(getLetterOnBoardAtPosition(board, position))
 
 def createGame(game):
     template_file = getTemplateFilePath()
@@ -174,25 +179,16 @@ def boardToPrettyString(board):
     table = [fmt.format(*row) for row in s]
     return '\n'.join(table)
 
-def printBoard(board):
-    header_row = list(string.ascii_lowercase)[:15]
-    header_row.insert(0, "")
-    for i in range(len(board)):
-        board[i].insert(0, i+1)
-    board.insert(0, header_row)
-    print(boardToPrettyString(board))
-
-def printGame(game):
-    board = readFullBoard(game)
-    if board == "":
-        return
-    printBoard(board)
-
 def setLetterOnBoardAtPosition(letter, board, position):
     row_index = int(getPositionRow(position))-1 # row starts at 1, index starts at 0
-    col_index = possible_cols.find(getPositionCol(position))
+    col_index = getPositionColIndex(position)
     board[row_index][col_index] = letter
     return board
+
+def getLetterOnBoardAtPosition(board, position): # assumes position valid
+    row_index = int(getPositionRow(position))-1 # row starts at 1, index starts at 0
+    col_index = getPositionColIndex(position)
+    return board[row_index][col_index]
 
 def setWord(game, position, word, direction):
     game_valid = validateGame(game)
@@ -223,6 +219,20 @@ def writeBoardToFile(game, board):
     f = open(getGameFilePath(game), "w")
     f.write(board_as_string)
     f.close()
+
+def printBoard(board):
+    header_row = list(string.ascii_lowercase)[:15]
+    header_row.insert(0, "")
+    for i in range(len(board)):
+        board[i].insert(0, i+1)
+    board.insert(0, header_row)
+    print(boardToPrettyString(board))
+
+def printGame(game):
+    board = readFullBoard(game)
+    if board == "":
+        return
+    printBoard(board)
 
 def printSpecialTiles(): 
     board = readEmptyBoard();
@@ -269,7 +279,7 @@ def main(command, game, letters, position, word, direction):
     elif command == "best-move":
         bestMove(game, letters)
     else:
-        print ("default")
+        print("default")
 
 if __name__ == "__main__":
     main()
