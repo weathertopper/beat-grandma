@@ -248,8 +248,15 @@ def printTileValues(): #TODO
     for t, v in tile_values_dict.items():
         print(t + " : " + v)
 
-def bestMove(game, letters, position): #TODO
-    print(" BEST MOVE \n game: {}\n letters: {}\n position: {}".format(game, letters, position))
+def bestMove(game, letters): #TODO
+    print(" BEST MOVE \n game: {}\n letters: {}".format(game, letters))
+    best_word=""
+    best_word_position=""
+    best_word_score=0
+
+    print("Best word: " + best_word)
+    print("Position: " + best_word_position)
+    print("Score: " + str(best_word_score))
 
 # CLI INPUTS
 @click.command()
