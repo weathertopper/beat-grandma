@@ -57,7 +57,7 @@ def getPositionRow(position): #i.e. the number
 
 def getPositionCol(position): #i.e. the letter
     if validatePositionLength(position):
-        return position[0]
+        return position[0].lower()
     return False
 
 def buildPosition(col, row): # assumes col and row are valid
@@ -172,8 +172,11 @@ def writeBoardToFile(game, board):
     f.write(board_as_string)
     f.close()
 
-def printSpecials(): #TODO
+def printSpecialTiles(): #TODO
     print(" PRINT SPECIALS \n")
+
+def printTileValues(): #TODO
+    print (" PRINT TILE VALUES \n")
 
 def bestMove(game, letters, position): #TODO
     print(" BEST MOVE \n game: {}\n letters: {}\n position: {}".format(game, letters, position))
