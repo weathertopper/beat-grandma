@@ -2,12 +2,18 @@ import click
 import shutil
 import os
 import string
+import time
 
+dictionary_dir="dictionary"
+enable_word_list_file="enable1.txt"
+wwf2_added_word_list_file="wwf2_added.txt"
+wwf2_removed_word_list_file="wwf2_removed.txt"
 config_dir = "config"
-saved_games_dir="games"
 tile_values_file_name="_wwf_tile_values.csv"
 special_tiles_file_name="_wwf_special_tiles.csv"
+saved_games_dir="games"
 possible_cols = "abcdefghijklmno"
+row_length = 15
 
 def validateDirection(direction):
     if direction == "vertical" or direction == "v" or direction == "horizontal" or direction == "h":
@@ -32,7 +38,7 @@ def validatePositionRow(row):
     rowAsInt = -1
     try:
         rowAsInt = int(row)
-        return 1 <= rowAsInt <= 15
+        return 1 <= rowAsInt <= row_length
     except:
         return False
 
@@ -48,6 +54,15 @@ def validatePosition(position):
 
 def getGameFilePath(game):
     return os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
+
+def getEnableWordFilePath():
+    return os.path.join(os.getcwd(), dictionary_dir, enable_word_list_file)
+
+def getWWF2AddedWordFilePath():
+    return os.path.join(os.getcwd(), dictionary_dir, wwf2_added_word_list_file)
+
+def getWWF2RemovedWordFilePath():
+    return os.path.join(os.getcwd(), dictionary_dir, wwf2_removed_word_list_file)
 
 def getTemplateFilePath():
     return os.path.join(os.getcwd(), config_dir, "_template.csv")
@@ -242,21 +257,64 @@ def printSpecialTiles():
     printBoard(board)
     
 
-def printTileValues(): #TODO
+def printTileValues():
     tile_values_dict = readTileValuesAsDict()
     print ("TILE VALUES")
     for t, v in tile_values_dict.items():
         print(t + " : " + v)
 
+def getListOfAllPositions(): 
+    all_positions = []
+    for char in possible_cols:
+        for i in range(row_length):
+            all_positions.insert(len(all_positions), buildPosition(char, i+1))
+    return all_positions
+
+
+def buildWordList():
+    enable_word_list = list(map(str.rstrip, open(getEnableWordFilePath(), "r").read().split("\n")))
+    added_word_list = list(map(str.rstrip, open(getWWF2AddedWordFilePath(), "r").read().split("\n")))
+    removed_word_list = list(map(str.rstrip, open(getWWF2RemovedWordFilePath(), "r").read().split("\n")))
+    full_list = enable_word_list + added_word_list
+    for r in removed_word_list:
+        full_list.remove(r)
+    return full_list
+
+def doesWordFit(game, letters, position, direction, word): #TODO
+    return False
+
+def isBoardValid(board): #TODO
+    return False
+
 def bestMove(game, letters): #TODO
     print(" BEST MOVE \n game: {}\n letters: {}".format(game, letters))
+
+    time_start = time.time()
+
     best_word=""
     best_word_position=""
     best_word_score=0
+   
+    all_positions = getListOfAllPositions()
+    all_directions =  ["h", "v"]
+    word_list =  buildWordList()
 
+    count = 0
+    
+    for p in all_positions:
+        for d in all_directions:
+            for w in word_list:
+                count += 1
+                    
     print("Best word: " + best_word)
     print("Position: " + best_word_position)
     print("Score: " + str(best_word_score))
+    print("Total Time: " + str(time.time() - time_start))
+    print("Word count: " + str(len(word_list)))
+    print("Position count: " + str(len(all_positions)))
+    print("Direction count: " + str(len(all_directions)))
+    print("Total count: " + str(count))
+
 
 # CLI INPUTS
 @click.command()
