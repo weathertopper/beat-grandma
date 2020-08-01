@@ -296,10 +296,14 @@ def doesWordFit(board, letters, position, direction, word): #TODO
 
 # Returns True if:
 # All words on board exist in dictionary list
-def isBoardValid(board): #TODO
+def isBoardValid(board):
     words_on_board = getWordsOnBoard(board)
-    print (words_on_board)
-    return False
+    dictionary = buildWordList();
+    for word in words_on_board:
+        if word not in dictionary:
+            print ("ERROR: Word {} not valid.".format(word))
+            return False
+    return True
 
 
 def getWordsOnBoard(board):
@@ -309,18 +313,14 @@ def getWordsOnBoard(board):
         for i in range(len(possible_cols)):
             col = i + 1
             c = row[i]
-            # print("C: " + c)
             if c == "" or col == len(possible_cols):
                 if c != "":
                     word += c
                 if word != "":
-                    # print("Adding word: " + word)
                     word_candidates.append(word)
-                    # print("Words on board: " + str(word_candidates))
                     word = ""
             else:
                 word += c
-                # print("Word now " + word)
 
     for col in possible_cols:
         word = ""
@@ -328,19 +328,14 @@ def getWordsOnBoard(board):
             row = i + 1
             pos = buildPosition(col, row)
             c = getLetterOnBoardAtPosition(board, pos)
-            # print("Pos: " + pos+ " C: " + c)
             if c == "" or row == row_length :
                 if c != "":
                     word += c
                 if word != "":
-                    # print("Adding word: " + word)
                     word_candidates.append(word)
-                    # print("Words on board: " + str(word_candidates))
                     word = ""
             else:
-                # print("Adding "+c+" to word")
                 word += c
-                # print("Word now " + word)
 
     words = []
     for word in word_candidates:
