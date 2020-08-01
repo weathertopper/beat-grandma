@@ -205,15 +205,7 @@ def getLetterOnBoardAtPosition(board, position): # assumes position valid
     col_index = getPositionColIndex(position)
     return board[row_index][col_index]
 
-def setWord(game, position, word, direction):
-    game_valid = validateGame(game)
-    direction_valid = validateDirection(direction)
-    position_valid = validatePosition(position)
-    word_valid = validateWord(word)
-    if not (game_valid and direction_valid and position_valid and word_valid):
-        print(" ERROR: Something not valid. Game Valid: {}; Direction Valid: {}; Position Valid: {}; Word Valid: {}".format(game_valid, direction_valid, position_valid, word_valid))
-        return False
-    board = readFullBoard(game)
+def setWordOnBoard(board, position, word, direction):
     curr_pos = position
     for i in range(len(word)):
         board = setLetterOnBoardAtPosition(word[i], board, curr_pos)
@@ -223,6 +215,28 @@ def setWord(game, position, word, direction):
                  print(" ERROR: Failed to set word {} at position {} in direction {} for game {}\n".format(word, position, direction, game))
                  return False
             curr_pos = next_pos
+    return board
+
+
+def setWord(game, position, word, direction):
+    game_valid = validateGame(game)
+    direction_valid = validateDirection(direction)
+    position_valid = validatePosition(position)
+    word_valid = validateWord(word)
+    if not (game_valid and direction_valid and position_valid and word_valid):
+        print(" ERROR: Something not valid. Game Valid: {}; Direction Valid: {}; Position Valid: {}; Word Valid: {}".format(game_valid, direction_valid, position_valid, word_valid))
+        return False
+    board = setWordOnBoard(readFullBoard(game), position, word, direction)
+    # curr_pos = position
+    # for i in range(len(word)):
+    #     board = setLetterOnBoardAtPosition(word[i], board, curr_pos)
+    #     if i != len(word)-1: # don't do math for next position if last letter set
+    #         next_pos = positionMoveRight(curr_pos) if directionIsHorizontal(direction) else positionMoveDown(curr_pos)
+    #         if not (next_pos and validatePosition(next_pos)):
+    #              print(" ERROR: Failed to set word {} at position {} in direction {} for game {}\n".format(word, position, direction, game))
+    #              return False
+    #         curr_pos = next_pos
+
     writeBoardToFile(game, board)
     print(" Set word {} at position {} in direction {} for game {}\n".format(word, position, direction, game))
 
@@ -281,22 +295,31 @@ def buildWordList():
         full_list.remove(r)
     return full_list
 
-def calculatePoints(board, position, direction, word): #TODO
+# Returns True if:
+# Word fits on board at position
+def wordFits(board, letters, position, direction, word): #TODO
     return False
-
 
 # Returns True if:
-# Word fits on board
-# Letters exist to make word
-# (Letters from hand were used)
-# Word "touches" other words
-def doesWordFit(board, letters, position, direction, word): #TODO
+# Word can be played with letters on board AND at least one letter from hand
+def lettersPlayable(board, letters, position, direction, word): #TODO
     return False
+
+# Returns True if:
+# Word connected to other words on board
+def wordConnected(board, letters, position, direction, word): #TODO
+    return False
+
+# Returns points for given move
+# need to know which letters from hand played in which positions
+def calculatePoints(): #TODO
+    return 0
+
 
 
 # Returns True if:
 # All words on board exist in dictionary list
-def isBoardValid(board):
+def validateAllWordsOnBoard(board):
     words_on_board = getWordsOnBoard(board)
     dictionary = buildWordList();
     for word in words_on_board:
@@ -345,31 +368,45 @@ def getWordsOnBoard(board):
 
 def bestMove(game, letters): #TODO
     print(" BEST MOVE \n game: {}\n letters: {}".format(game, letters))
-    isBoardValid(readFullBoard(game))
+    validateAllWordsOnBoard(readFullBoard(game))
     time_start = time.time()
 
     best_word=""
     best_word_position=""
+    best_word_direction=""
     best_word_score=0
    
     all_positions = getListOfAllPositions()
-    all_directions =  ["h", "v"]
+    all_directions =  ["horizontal", "vertical"]
     word_list =  buildWordList()
 
-    count = 0
+    count = 0 # Can remove after TODO
+
+    clean_board = readFullBoard(game)
     
     for p in all_positions:
         for d in all_directions:
             for w in word_list:
-                count += 1
+                if wordFits(clean_board, letters, p, d, w) and \
+                   lettersPlayable(clean_board, letters, p, d, w) and \
+                   wordConnected(clean_board, letters, p, d, w):
+                    dirty_board = setWordOnBoard(readFullBoard(game), p, w, d)
+                    if validateAllWordsOnBoard(dirty_board):
+                        score = calculatePoints()
+                        print("Word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
+                        if score > best_word_score or \
+                            score == best_word_score and len(w) > len(best_word):
+                            best_word_score = score
+                            best_word = w
+                            best_word_position = p
+                            best_word_direction = d
+                            print ("Word {} is currently the best word".format(w))
+                count += 1 # Can remove after TODO
                     
     print("Best word: " + best_word)
     print("Position: " + best_word_position)
     print("Score: " + str(best_word_score))
     print("Total Time: " + str(time.time() - time_start))
-    print("Word count: " + str(len(word_list)))
-    print("Position count: " + str(len(all_positions)))
-    print("Direction count: " + str(len(all_directions)))
     print("Total count: " + str(count))
 
 
