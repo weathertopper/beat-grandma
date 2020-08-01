@@ -22,7 +22,7 @@ def validateDirection(direction):
     return False
 
 def validateWord(word):
-    return isinstance(word, str) and len(word) > 0
+    return len(word) > 0
 
 def validateGame(game):
     game_file = getGameFilePath(game)
@@ -211,6 +211,7 @@ def setWord(game, position, word, direction):
     position_valid = validatePosition(position)
     word_valid = validateWord(word)
     if not (game_valid and direction_valid and position_valid and word_valid):
+        print(" ERROR: Something not valid. Game Valid: {}; Direction Valid: {}; Position Valid: {}; Word Valid: {}".format(game_valid, direction_valid, position_valid, word_valid))
         return False
     board = readFullBoard(game)
     curr_pos = position
@@ -280,15 +281,76 @@ def buildWordList():
         full_list.remove(r)
     return full_list
 
-def doesWordFit(game, letters, position, direction, word): #TODO
+def calculatePoints(board, position, direction, word): #TODO
     return False
 
-def isBoardValid(board): #TODO
+
+# Returns True if:
+# Word fits on board
+# Letters exist to make word
+# (Letters from hand were used)
+# Word "touches" other words
+def doesWordFit(board, letters, position, direction, word): #TODO
     return False
+
+
+# Returns True if:
+# All words on board exist in dictionary list
+def isBoardValid(board): #TODO
+    words_on_board = getWordsOnBoard(board)
+    print (words_on_board)
+    return False
+
+
+def getWordsOnBoard(board):
+    word_candidates= []
+    for row in board:
+        word = ""
+        for i in range(len(possible_cols)):
+            col = i + 1
+            c = row[i]
+            # print("C: " + c)
+            if c == "" or col == len(possible_cols):
+                if c != "":
+                    word += c
+                if word != "":
+                    # print("Adding word: " + word)
+                    word_candidates.append(word)
+                    # print("Words on board: " + str(word_candidates))
+                    word = ""
+            else:
+                word += c
+                # print("Word now " + word)
+
+    for col in possible_cols:
+        word = ""
+        for i in range(row_length):
+            row = i + 1
+            pos = buildPosition(col, row)
+            c = getLetterOnBoardAtPosition(board, pos)
+            # print("Pos: " + pos+ " C: " + c)
+            if c == "" or row == row_length :
+                if c != "":
+                    word += c
+                if word != "":
+                    # print("Adding word: " + word)
+                    word_candidates.append(word)
+                    # print("Words on board: " + str(word_candidates))
+                    word = ""
+            else:
+                # print("Adding "+c+" to word")
+                word += c
+                # print("Word now " + word)
+
+    words = []
+    for word in word_candidates:
+        if len(word) > 1:
+            words.append(word)
+    return words
 
 def bestMove(game, letters): #TODO
     print(" BEST MOVE \n game: {}\n letters: {}".format(game, letters))
-
+    isBoardValid(readFullBoard(game))
     time_start = time.time()
 
     best_word=""
