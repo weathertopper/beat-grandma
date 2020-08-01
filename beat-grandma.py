@@ -227,16 +227,6 @@ def setWord(game, position, word, direction):
         print(" ERROR: Something not valid. Game Valid: {}; Direction Valid: {}; Position Valid: {}; Word Valid: {}".format(game_valid, direction_valid, position_valid, word_valid))
         return False
     board = setWordOnBoard(readFullBoard(game), position, word, direction)
-    # curr_pos = position
-    # for i in range(len(word)):
-    #     board = setLetterOnBoardAtPosition(word[i], board, curr_pos)
-    #     if i != len(word)-1: # don't do math for next position if last letter set
-    #         next_pos = positionMoveRight(curr_pos) if directionIsHorizontal(direction) else positionMoveDown(curr_pos)
-    #         if not (next_pos and validatePosition(next_pos)):
-    #              print(" ERROR: Failed to set word {} at position {} in direction {} for game {}\n".format(word, position, direction, game))
-    #              return False
-    #         curr_pos = next_pos
-
     writeBoardToFile(game, board)
     print(" Set word {} at position {} in direction {} for game {}\n".format(word, position, direction, game))
 
