@@ -3,6 +3,7 @@ import shutil
 import os
 import string
 import time
+import copy
 
 dictionary_dir="dictionary"
 enable_word_list_file="enable1.txt"
@@ -30,6 +31,9 @@ def validateGame(game):
         return True
     print("The game file {} does not exist".format(game_file))
     return False
+
+def validateLetters(letters):
+    return letters and len(letters)
 
 def validatePositionLength(position):
     return len(position) == 2 or len(position) == 3
@@ -285,15 +289,44 @@ def buildWordList():
         full_list.remove(r)
     return full_list
 
+def nextPosition(position, direction):
+    if directionIsHorizontal(direction):
+        return positionMoveRight(position)
+    else:
+        return positionMoveDown(position)
+
+
 # Returns True if:
-# Word fits on board at position
+# Word fits on board (meaning spaces don't run out and spaces aren't already taken)
 def wordFits(board, letters, position, direction, word): #TODO
-    return False
+    curr_pos = position
+    for letter_in_word in word:
+        if not curr_pos:
+            return False
+        letter_on_board = getLetterOnBoardAtPosition(board, curr_pos)
+        if letter_on_board == letter_in_word or letter_on_board == "":
+            curr_pos = nextPosition(position, direction)
+        else:
+            return False
+    return True
 
 # Returns True if:
 # Word can be played with letters on board AND at least one letter from hand
-def lettersPlayable(board, letters, position, direction, word): #TODO
-    return False
+def wordPlayable(board, letters, position, direction, word): #TODO
+    letters_to_use = copy.deepcopy(letters)
+    used_letters = {}
+    curr_pos = position
+    for letter_in_word in word:
+        letter_on_board = getLetterOnBoardAtPosition(board, curr_pos)
+        if letter_on_board is not "":
+            continue
+        elif letter_in_word in letters_to_use:
+            used_letters[curr_pos] = letter_in_word
+            letters_to_use.remove(letter_in_word)
+        else:
+            return False
+        curr_pos = nextPosition(curr_pos, direction)
+    return used_letters # empty dict gives bool value of False
 
 # Returns True if:
 # Word connected to other words on board
@@ -358,6 +391,14 @@ def getWordsOnBoard(board):
 
 def bestMove(game, letters): #TODO
     print(" BEST MOVE \n game: {}\n letters: {}".format(game, letters))
+    letters = list(letters)
+    game_valid = validateGame(game)
+    letters_valid = validateLetters(letters)
+
+    if not (game_valid and letters_valid):
+        print(" ERROR: Something not valid. Game Valid: {}; Letters Valid: {}".format(game_valid, letters_valid))
+        return False
+
     validateAllWordsOnBoard(readFullBoard(game))
     time_start = time.time()
 
@@ -378,7 +419,7 @@ def bestMove(game, letters): #TODO
         for d in all_directions:
             for w in word_list:
                 if wordFits(clean_board, letters, p, d, w) and \
-                   lettersPlayable(clean_board, letters, p, d, w) and \
+                   wordPlayable(clean_board, letters, p, d, w) and \
                    wordConnected(clean_board, letters, p, d, w):
                     dirty_board = setWordOnBoard(readFullBoard(game), p, w, d)
                     if validateAllWordsOnBoard(dirty_board):
