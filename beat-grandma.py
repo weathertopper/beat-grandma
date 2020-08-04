@@ -162,6 +162,9 @@ def readFullBoard(game):
         return board
     return ""
 
+def deepCopyBoard(board):
+    return copy.deepcopy(board)
+
 def readTileValuesAsDict():
     tile_values = dict()
     f = open(getTileValuesFilePath(), "r")
@@ -547,7 +550,7 @@ def bestMove(game, letters): #TODO
                     if wordPlayable(clean_board, letters, p, d, w):
                         if wordConnected(clean_board, letters, p, d, w):
                             letters_to_play = getLettersPlayed(clean_board, p, d, w)
-                            dirty_board = setWordOnBoard(readFullBoard(game), p, w, d)
+                            dirty_board = setWordOnBoard(deepCopyBoard(clean_board), p, w, d)
                             if validateAllWordsOnBoard(dirty_board):
                                 score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play)
                                 print("Word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
@@ -558,7 +561,9 @@ def bestMove(game, letters): #TODO
                                     best_word_position = p
                                     best_word_direction = d
                                     print ("Word {} is currently the best word".format(w))
-                count += 1 # Can remove after TODO
+                count += 1
+                if count % 100000 == 0: 
+                    print ("count: "+ str(count))
     print("Best word: " + best_word)
     print("Position: " + best_word_position)
     print("Score: " + str(best_word_score))
