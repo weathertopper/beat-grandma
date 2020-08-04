@@ -6,7 +6,7 @@ import time
 import copy
 
 dictionary_dir="dictionary"
-enable_word_list_file="test.txt"
+enable_word_list_file="enable1.txt"
 wwf2_added_word_list_file="wwf2_added.txt"
 wwf2_removed_word_list_file="wwf2_removed.txt"
 config_dir = "config"
@@ -96,6 +96,11 @@ def buildPosition(col, row): # assumes col and row are valid
 def directionIsHorizontal(direction): # otherwise it's vertical
     return direction == "horizontal" or direction == "h"
 
+def getOppositeDirection(direction):
+    if directionIsHorizontal(direction):
+        return "vertical"
+    return "horizontal"
+
 def positionMoveUp(position): # returns next position if valid, else False (assumes position is valid) 
     up_row = int(getPositionRow(position))-1
     if validatePositionRow(up_row):
@@ -167,6 +172,8 @@ def readTileValuesAsDict():
         tile_values[tile_val[0]] = tile_val[1]
     return tile_values
 
+tile_values_dict = readTileValuesAsDict()
+
 def specialStringToCharacter(special_string):
     special_characters = { 
         "tw": "T",
@@ -188,6 +195,8 @@ def readSpecialTilesAsDict():
         special_char = specialStringToCharacter(position_special[1])
         special_tiles[position] = special_char
     return special_tiles
+
+special_tiles = readSpecialTilesAsDict()
 
 def boardToPrettyString(board):
     # script kiddie!
@@ -259,15 +268,13 @@ def printGame(game):
     printBoard(board)
 
 def printSpecialTiles(): 
-    board = readEmptyBoard();
-    special_tiles = readSpecialTilesAsDict()
+    board = readEmptyBoard()
     for pos, char in special_tiles.items():
         setLetterOnBoardAtPosition(char, board, pos)
     printBoard(board)
     
 
 def printTileValues():
-    tile_values_dict = readTileValuesAsDict()
     print ("TILE VALUES")
     for t, v in tile_values_dict.items():
         print(t + " : " + v)
@@ -300,6 +307,11 @@ def nextPosition(position, direction):
         # print("positionMoveDown: " + positionMoveDown(position))
         return positionMoveDown(position)
 
+def previousPosition(position, direction):
+    if directionIsHorizontal(direction):
+        return positionMoveLeft(position)
+    else:
+        return positionMoveUp(position)  
 
 # Returns True if:
 # Word fits on board (meaning spaces don't run out and spaces aren't already taken)
@@ -333,15 +345,124 @@ def wordPlayable(board, letters, position, direction, word): #TODO
         curr_pos = nextPosition(curr_pos, direction)
     return used_letters # empty dict gives bool value of False
 
+
+def getAdjacentPositions(position,direction):
+    adj_pos = []
+    if directionIsHorizontal(direction):
+        up_one = positionMoveUp(position)
+        if up_one:
+            adj_pos.append(up_one)
+        down_one = positionMoveDown(position)
+        if down_one:
+            adj_pos.append(down_one)
+    else:
+        left_one = positionMoveLeft(position)
+        if left_one:
+            adj_pos.append(left_one)
+        right_one = positionMoveRight(position)
+        if right_one:
+            adj_pos.append(right_one)
+    return adj_pos
+
+# Returns all positions surrounding the given word
+# Assumes word fits
+def buildBoundingBox(board, position, direction, word):
+    positions_to_check = []
+    pre_pos = previousPosition(position, direction)
+    if pre_pos:
+        positions_to_check.append(pre_pos)
+    curr_pos = position
+    for i in range(len(word)):
+        positions_to_check.append(curr_pos)
+        positions_to_check.extend(getAdjacentPositions(curr_pos, direction))
+        curr_pos = nextPosition(curr_pos, direction)
+    if curr_pos: # this is now post_position, if it exists
+        positions_to_check.append(curr_pos)
+    return positions_to_check
+
+
 # Returns True if:
 # Word connected to other words on board
 def wordConnected(board, letters, position, direction, word): #TODO
-    return True
+    connected_positions = buildBoundingBox(board, position, direction, word)
+    for pos in connected_positions:
+        if getLetterOnBoardAtPosition(board, pos) is not "":
+            return True
+    return False
+
+def lookupLetterScore(letter):
+    return tile_values_dict.get(letter,0)
+
+def lookupSpecialTile(position):
+    return special_tiles.get(position, False)
+
+def calculateWordScore(clean_board,start_pos, direction, word):
+    word_score = 0
+    triple_word_count = 0
+    double_word_count = 0
+    curr_pos = start_pos
+    for letter in word:
+        letter_score = int(lookupLetterScore(letter))
+        letter_at_curr_pos = getLetterOnBoardAtPosition(clean_board, curr_pos)
+        special_tile = lookupSpecialTile(curr_pos)
+        if letter_at_curr_pos is not "" or not special_tile:
+            word_score = word_score + letter_score
+        elif special_tile == "dl":
+            word_score = word_score +  (2 * letter_score)
+        elif special_tile == "tl":
+            word_score = word_score +  (3 * letter_score)
+        elif special_tile == "tw":
+            triple_word_count = triple_word_count +  1
+        elif special_tile == "dw":
+            double_word_count = double_word_count +  1
+        curr_pos = nextPosition(curr_pos, direction)
+    if triple_word_count > 0:
+        word_score = word_score * triple_word_count * 3
+    if double_word_count > 0:
+        word_score = word_score * double_word_count * 2
+    return word_score
+        
+
+# returns dict of {pos: letter} pairs
+def getLettersPlayed(board, position, direction, word):
+    letters_played = dict()
+    curr_pos = position
+    for letter in word:
+        if getLetterOnBoardAtPosition(board, curr_pos) is "":
+            letters_played[curr_pos] = letter
+        curr_pos = nextPosition(curr_pos, direction)
+    return letters_played
+
+def getStartPositionOfWordOnBoardAtPositionInDirection(dirty_board, position, direction):
+    start_position = position
+    while previousPosition(start_position, direction):
+        prev_pos = previousPosition(start_position, direction)
+        if getLetterOnBoardAtPosition(dirty_board, prev_pos) is not "":
+            start_position = prev_pos
+        else:
+            return start_position
+    return start_position
+
+def getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction):
+    word = ""
+    curr_pos = start_position
+    while getLetterOnBoardAtPosition(dirty_board, curr_pos) is not "":
+        word += getLetterOnBoardAtPosition(dirty_board, curr_pos)
+        curr_pos = nextPosition(curr_pos, direction)
+    return word
 
 # Returns points for given move
 # need to know which letters from hand played in which positions
-def calculatePoints(): #TODO
-    return 0
+def calculatePoints(clean_board, dirty_board, start_position, direction, position_letter_dict): #TODO
+    total_points = 0
+    primary_word = getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction)
+    total_points += calculateWordScore(clean_board,start_position,direction, primary_word)
+    opposite_direction = getOppositeDirection(direction)
+    for pos in position_letter_dict:
+        first_pos_in_word = getStartPositionOfWordOnBoardAtPositionInDirection(dirty_board, pos, opposite_direction)
+        adjacent_word = getWordOnBoardAtPositionInDirection(dirty_board, first_pos_in_word, opposite_direction)
+        total_points += calculateWordScore(clean_board, first_pos_in_word, opposite_direction, adjacent_word)
+    return total_points
 
 
 
@@ -352,7 +473,6 @@ def validateAllWordsOnBoard(board):
     dictionary = buildWordList();
     for word in words_on_board:
         if word not in dictionary:
-            print ("ERROR: Word {} not valid.".format(word))
             return False
     return True
 
@@ -395,7 +515,6 @@ def getWordsOnBoard(board):
     return words
 
 def bestMove(game, letters): #TODO
-    print(" BEST MOVE \n game: {}\n letters: {}".format(game, letters))
     letters = list(letters)
     game_valid = validateGame(game)
     letters_valid = validateLetters(letters)
@@ -420,7 +539,6 @@ def bestMove(game, letters): #TODO
     clean_board = readFullBoard(game)
     
     for w in word_list:
-        print("WORD "+ w)
         if w is "":
             continue
         for p in all_positions:
@@ -428,9 +546,10 @@ def bestMove(game, letters): #TODO
                 if wordFits(clean_board, letters, p, d, w):
                     if wordPlayable(clean_board, letters, p, d, w):
                         if wordConnected(clean_board, letters, p, d, w):
+                            letters_to_play = getLettersPlayed(clean_board, p, d, w)
                             dirty_board = setWordOnBoard(readFullBoard(game), p, w, d)
                             if validateAllWordsOnBoard(dirty_board):
-                                score = calculatePoints()
+                                score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play)
                                 print("Word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
                                 if score > best_word_score or \
                                     score == best_word_score and len(w) > len(best_word):
