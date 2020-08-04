@@ -6,7 +6,7 @@ import time
 import copy
 
 dictionary_dir="dictionary"
-enable_word_list_file="enable1.txt"
+enable_word_list_file="test.txt"
 wwf2_added_word_list_file="wwf2_added.txt"
 wwf2_removed_word_list_file="wwf2_removed.txt"
 config_dir = "config"
@@ -290,9 +290,14 @@ def buildWordList():
     return full_list
 
 def nextPosition(position, direction):
+    # print("in nextPosition: "+ "position: "+position+ " direction "+direction)
     if directionIsHorizontal(direction):
+        # print("IS HORIZONTAL")
+        # print("positionMoveRight: " + positionMoveRight(position))
         return positionMoveRight(position)
     else:
+        # print("IS VERTICAL")
+        # print("positionMoveDown: " + positionMoveDown(position))
         return positionMoveDown(position)
 
 
@@ -305,7 +310,7 @@ def wordFits(board, letters, position, direction, word): #TODO
             return False
         letter_on_board = getLetterOnBoardAtPosition(board, curr_pos)
         if letter_on_board == letter_in_word or letter_on_board == "":
-            curr_pos = nextPosition(position, direction)
+            curr_pos = nextPosition(curr_pos, direction)
         else:
             return False
     return True
@@ -331,7 +336,7 @@ def wordPlayable(board, letters, position, direction, word): #TODO
 # Returns True if:
 # Word connected to other words on board
 def wordConnected(board, letters, position, direction, word): #TODO
-    return False
+    return True
 
 # Returns points for given move
 # need to know which letters from hand played in which positions
@@ -399,7 +404,6 @@ def bestMove(game, letters): #TODO
         print(" ERROR: Something not valid. Game Valid: {}; Letters Valid: {}".format(game_valid, letters_valid))
         return False
 
-    validateAllWordsOnBoard(readFullBoard(game))
     time_start = time.time()
 
     best_word=""
@@ -415,25 +419,27 @@ def bestMove(game, letters): #TODO
 
     clean_board = readFullBoard(game)
     
-    for p in all_positions:
-        for d in all_directions:
-            for w in word_list:
-                if wordFits(clean_board, letters, p, d, w) and \
-                   wordPlayable(clean_board, letters, p, d, w) and \
-                   wordConnected(clean_board, letters, p, d, w):
-                    dirty_board = setWordOnBoard(readFullBoard(game), p, w, d)
-                    if validateAllWordsOnBoard(dirty_board):
-                        score = calculatePoints()
-                        print("Word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
-                        if score > best_word_score or \
-                            score == best_word_score and len(w) > len(best_word):
-                            best_word_score = score
-                            best_word = w
-                            best_word_position = p
-                            best_word_direction = d
-                            print ("Word {} is currently the best word".format(w))
+    for w in word_list:
+        print("WORD "+ w)
+        if w is "":
+            continue
+        for p in all_positions:
+            for d in all_directions:
+                if wordFits(clean_board, letters, p, d, w):
+                    if wordPlayable(clean_board, letters, p, d, w):
+                        if wordConnected(clean_board, letters, p, d, w):
+                            dirty_board = setWordOnBoard(readFullBoard(game), p, w, d)
+                            if validateAllWordsOnBoard(dirty_board):
+                                score = calculatePoints()
+                                print("Word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
+                                if score > best_word_score or \
+                                    score == best_word_score and len(w) > len(best_word):
+                                    best_word_score = score
+                                    best_word = w
+                                    best_word_position = p
+                                    best_word_direction = d
+                                    print ("Word {} is currently the best word".format(w))
                 count += 1 # Can remove after TODO
-                    
     print("Best word: " + best_word)
     print("Position: " + best_word_position)
     print("Score: " + str(best_word_score))
