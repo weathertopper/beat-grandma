@@ -672,6 +672,7 @@ def bestMove(game, letters): #TODO
                     print ("count {} time since start {} ".format(str(count), str(time.time()- time_start)))
     print("Best word: " + best_word)
     print("Position: " + best_word_position)
+    print("Direction: " + best_word_direction)
     print("Score: " + str(best_word_score))
     print("Total Time: " + str(time.time() - time_start))
     print("Total count: " + str(count))
