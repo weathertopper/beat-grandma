@@ -128,10 +128,36 @@ def positionMoveRight(position): # returns next position if valid, else False (a
         return buildPosition(right_col, getPositionRow(position))
     return False
 
+def getColumnLetters(board,position):
+    column_letters = []
+    col = getPositionCol(position)
+    for i in range(row_length):
+        letter = getLetterOnBoardAtPosition(board, buildPosition(col, i+1))
+        if letter is not "":
+            column_letters.append(letter)
+    return column_letters 
+
+def getRowLetters(board, position):
+    row_letters = []
+    row = getPositionRow(position)
+    for char in possible_cols:
+        letter = getLetterOnBoardAtPosition(board, buildPosition(char, row))
+        if letter is not "":
+            row_letters.append(letter)
+    return row_letters 
+
 def testInput(command, game, letters, position, word, direction):
     print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(command, game, letters, position, word, direction))
-    board = readFullBoard(game)
-    print(getLetterOnBoardAtPosition(board, position))
+    board = readFullBoard("janey002")
+    dirty = deepCopyBoard(board)
+    dirty = setWordOnBoard(dirty, "j14", "ourie", "h")
+    pld = dict()
+    pld["j14"]="o"
+    pld["k14"]="u"
+    pld["l14"]="r"
+    pld["m14"]="i"
+    pld["n14"]="e"
+    print(calculatePoints(board, dirty, "j14", 'h', pld, "reeiuto"))
 
 def createGame(game):
     template_file = getTemplateFilePath()
@@ -436,9 +462,14 @@ def calculateWordScore(clean_board,start_pos, direction, word):
             word_score = word_score +  (3 * letter_score)
         elif special_tile == "T":
             triple_word_count = triple_word_count +  1
+            word_score = word_score + letter_score
+            # print("calculateWordScore for loop triple_word_count: {}".format(str(triple_word_count)))
         elif special_tile == "D":
             double_word_count = double_word_count +  1
+            word_score = word_score + letter_score
+            # print("calculateWordScore for loop double_word_count: {}".format(str(double_word_count)))
         curr_pos = nextPosition(curr_pos, direction)
+        # print("calculateWordScore for loop word_score: {}".format(str(word_score)))
         # print("calculateWordScore for loop curr_pos: {}".format(curr_pos))
     if triple_word_count > 0:
         # print("calculateWordScore triple_word_count: {}".format(str(triple_word_count)))
@@ -518,6 +549,18 @@ def validateAllWordsOnBoard(board, print_errors):
             return False
     return True
 
+def genericWordListThinning(word_list):
+    # print("genericWordListThinning start len: {}".format(str(len(word_list))))
+    max_len = max(row_length, len(possible_cols))
+    thinned = filter(lambda x: len(x) <= max_len, word_list) # removing words that are too long
+    # print("genericWordListThinning end len: {}".format(str(len(thinned))))
+    return thinned
+
+def thinWordList(word_list, letters, position, direction):
+    # print("thinWordList position: {} direction: {} start len: {}".format(position, direction, str(len(word_list))))
+    thinned = filter(lambda x: len(x) <= len(letters), word_list) # r
+    # print("thinWordList position: {} direction: {} end len: {}".format(position, direction, str(len(thinned))))
+    return thinned
 
 def getWordsOnBoard(board):
     word_candidates= []
@@ -574,21 +617,39 @@ def bestMove(game, letters): #TODO
    
     all_positions = getListOfAllPositions()
     all_directions =  ["horizontal", "vertical"]
-    word_list =  buildWordList()
 
     count = 0 # Can remove after TODO
 
     clean_board = readFullBoard(game)
 
+    word_list =  genericWordListThinning(buildWordList())
+
+    col_word_lists = dict()
+    row_word_lists = dict()
+    for char in possible_cols:
+        fake_position = buildPosition(char, 1)
+        col_letters= getColumnLetters(clean_board, fake_position)
+        col_letters.extend(letters)
+        col_word_lists[char] = thinWordList(word_list, col_letters, fake_position, "v")
+    for i in range(row_length):
+        row_index = str( i + 1 )
+        fake_position = buildPosition(possible_cols[0], row_index)
+        row_letters = getRowLetters(clean_board, fake_position)
+        row_letters.extend(letters)
+        row_word_lists[row_index] = thinWordList(word_list, row_letters, fake_position, "h")
+
     if not validateAllWordsOnBoard(clean_board, True):
         print("Starting with an invalid board!")
         return
     
-    for w in word_list:
-        if w is "":
-            continue
-        for p in all_positions:
-            for d in all_directions:
+    for p in all_positions:
+        for d in all_directions:
+            thinned_word_list = col_word_lists.get(getPositionCol(p))
+            if directionIsHorizontal(d):
+                thinned_word_list = row_word_lists.get(str(getPositionRow(p)))
+            for w in thinned_word_list:
+                if w is "":
+                    continue
                 if wordFits(clean_board, letters, p, d, w):
                     if wordPlayable(clean_board, letters, p, d, w):
                         if wordConnected(clean_board, letters, p, d, w):
@@ -607,8 +668,8 @@ def bestMove(game, letters): #TODO
                                     best_word_direction = d
                                     print("CURRENT BEST WORD: Word {} Position {} Direction {} Score {}".format(w, p, d, str(score)))
                 count += 1
-                if count % 100000 == 0: 
-                    print ("count: "+ str(count))
+                if count % 1000000 == 0: 
+                    print ("count {} time since start {} ".format(str(count), str(time.time()- time_start)))
     print("Best word: " + best_word)
     print("Position: " + best_word_position)
     print("Score: " + str(best_word_score))
@@ -644,7 +705,7 @@ def main(command, game, letters, position, word, direction):
     elif command == "best-move":
         bestMove(game, letters)
     else:
-        print("default")
+        print("Say what?")
 
 if __name__ == "__main__":
     main()
