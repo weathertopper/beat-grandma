@@ -148,16 +148,6 @@ def getRowLetters(board, position):
 
 def testInput(command, game, letters, position, word, direction):
     print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(command, game, letters, position, word, direction))
-    board = readFullBoard("janey002")
-    dirty = deepCopyBoard(board)
-    dirty = setWordOnBoard(dirty, "j14", "ourie", "h")
-    pld = dict()
-    pld["j14"]="o"
-    pld["k14"]="u"
-    pld["l14"]="r"
-    pld["m14"]="i"
-    pld["n14"]="e"
-    print(calculatePoints(board, dirty, "j14", 'h', pld, "reeiuto"))
 
 def createGame(game):
     template_file = getTemplateFilePath()
