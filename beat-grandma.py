@@ -546,12 +546,6 @@ def genericWordListThinning(word_list):
     # print("genericWordListThinning end len: {}".format(str(len(thinned))))
     return thinned
 
-# def thinWordList(word_list, letters, position, direction):
-#     # print("thinWordList position: {} direction: {} start len: {}".format(position, direction, str(len(word_list))))
-#     thinned = filter(lambda x: len(x) <= len(letters), word_list) # r
-#     # print("thinWordList position: {} direction: {} end len: {}".format(position, direction, str(len(thinned))))
-#     return thinned
-
 def thinWordList(word_list, letters, position, direction):
     # print("thinWordList position: {} direction: {} start len: {}".format(position, direction, str(len(word_list))))
     thinned_by_len = filter(lambda x: len(x) <= len(letters), word_list) 
