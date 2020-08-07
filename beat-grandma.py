@@ -546,11 +546,22 @@ def genericWordListThinning(word_list):
     # print("genericWordListThinning end len: {}".format(str(len(thinned))))
     return thinned
 
+# def thinWordList(word_list, letters, position, direction):
+#     # print("thinWordList position: {} direction: {} start len: {}".format(position, direction, str(len(word_list))))
+#     thinned = filter(lambda x: len(x) <= len(letters), word_list) # r
+#     # print("thinWordList position: {} direction: {} end len: {}".format(position, direction, str(len(thinned))))
+#     return thinned
+
 def thinWordList(word_list, letters, position, direction):
     # print("thinWordList position: {} direction: {} start len: {}".format(position, direction, str(len(word_list))))
-    thinned = filter(lambda x: len(x) <= len(letters), word_list) # r
+    thinned_by_len = filter(lambda x: len(x) <= len(letters), word_list) 
+    def containsLettersToFormWord(word):
+        """ Check whether sequence str contains ALL of the items in set. """
+        return 0 not in [c in letters for c in word]
+    thinned = filter(containsLettersToFormWord, thinned_by_len)
     # print("thinWordList position: {} direction: {} end len: {}".format(position, direction, str(len(thinned))))
     return thinned
+
 
 def getWordsOnBoard(board):
     word_candidates= []
@@ -658,14 +669,15 @@ def bestMove(game, letters): #TODO
                                     best_word_direction = d
                                     print("CURRENT BEST WORD: Word {} Position {} Direction {} Score {}".format(w, p, d, str(score)))
                 count += 1
-                if count % 1000000 == 0: 
-                    print ("count {} time since start {} ".format(str(count), str(time.time()- time_start)))
+                # if count % 1000000 == 0: 
+                #     print ("count {} time since start {} ".format(str(count), str(time.time()- time_start)))
     print("Best word: " + best_word)
     print("Position: " + best_word_position)
     print("Direction: " + best_word_direction)
     print("Score: " + str(best_word_score))
     print("Total Time: " + str(time.time() - time_start))
     print("Total count: " + str(count))
+    print ("set-word -g {} -p {} -d {} -w {}".format(game, best_word_position, best_word_direction, best_word))
 
 
 # CLI INPUTS
