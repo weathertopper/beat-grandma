@@ -335,7 +335,7 @@ def previousPosition(position, direction):
 
 # Returns True if:
 # Word fits on board (meaning spaces don't run out and spaces aren't already taken)
-def wordFits(board, letters, position, direction, word): #TODO
+def wordFits(board, letters, position, direction, word):
     curr_pos = position
     for letter_in_word in word:
         if not curr_pos:
@@ -350,30 +350,31 @@ def wordFits(board, letters, position, direction, word): #TODO
 # Returns True if:
 # Word can be played with letters on board AND at least one letter from hand
 def wordPlayable(board, letters, position, direction, word): #TODO
-    # print("wordPlayable: word {} letters {} position {} direction {}".format(word, letters, position, direction))
+    # print("LOG wordPlayable: word {} letters {} position {} direction {}".format(word, letters, position, direction))
     letters_to_use = copy.deepcopy(letters)
-    # print("wordPlayable: letters_to_use {}".format(letters_to_use))
+    # print("LOG wordPlayable: letters_to_use {}".format(letters_to_use))
     used_letters = {}
     curr_pos = position
-    # print("wordPlayable: curr_pos {}".format(curr_pos))
+    # print("LOG wordPlayable: curr_pos {}".format(curr_pos))
     for letter_in_word in word:
-        # print("wordPlayable: for loop letter_in_word {}".format(letter_in_word))
+        # print("LOG wordPlayable: for loop letter_in_word {}".format(letter_in_word))
         letter_on_board = getLetterOnBoardAtPosition(board, curr_pos)
-        # print("wordPlayable: for loop letter_on_board {}".format(letter_on_board))
+        # print("LOG wordPlayable: for loop letter_on_board {}".format(letter_on_board))
         if letter_on_board is not "" and letter_on_board is letter_in_word:
-            # print("wordPlayable: letter_on_baard is not empty")
-            continue
+            unused = 0
+            # print("LOG wordPlayable: letter_on_baard is not empty")
+            # continue
         elif letter_in_word in letters_to_use:
-            # print("wordPlayable: for loop letter_in_word {} letters_to_use {}".format(letter_in_word, letters_to_use))
+            # print("LOG wordPlayable: for loop letter_in_word {} letters_to_use {}".format(letter_in_word, letters_to_use))
             used_letters[curr_pos] = letter_in_word
-            # print("wordPlayable: for loop used_letters {}".format(used_letters))
+            # print("LOG wordPlayable: for loop used_letters {}".format(used_letters))
             letters_to_use.remove(letter_in_word)
-            # print("wordPlayable: for loop letter_in_word {}".format(letter_in_word))
+            # print("LOG wordPlayable: for loop letter_in_word {}".format(letter_in_word))
         else:
-            # print("wordPlayable: for loop returning false")
+            # print("LOG wordPlayable: for loop returning false")
             return False
         curr_pos = nextPosition(curr_pos, direction)
-        # print("wordPlayable: curr pos nextt pos {}".format(curr_pos))
+        # print("LOG wordPlayable: curr pos nextt pos {}".format(curr_pos))
     return used_letters # empty dict gives bool value of False
 
 
@@ -431,19 +432,19 @@ def calculateWordScore(clean_board,start_pos, direction, word):
     word_score = 0
     triple_word_count = 0
     double_word_count = 0
-    # print("calculateWordScore word: {} start_pos: {} direction: {}".format(word, start_pos, direction))
+    # print("LOG calculateWordScore word: {} start_pos: {} direction: {}".format(word, start_pos, direction))
     curr_pos = start_pos
-    # print("calculateWordScore curr_pos: {}".format(curr_pos))
+    # print("LOG calculateWordScore curr_pos: {}".format(curr_pos))
     if len(word) is 1: # not a legit word
         return 0
     for letter in word:
-        # print("calculateWordScore for loop letter: {}".format(letter))
+        # print("LOG calculateWordScore for loop letter: {}".format(letter))
         letter_score = int(lookupLetterScore(letter))
-        # print("calculateWordScore for loop letter_score: {}".format(letter_score))
+        # print("LOG calculateWordScore for loop letter_score: {}".format(letter_score))
         letter_at_curr_pos = getLetterOnBoardAtPosition(clean_board, curr_pos)
-        # print("calculateWordScore for loop letter_at_curr_pos: {}".format(letter_at_curr_pos))
+        # print("LOG calculateWordScore for loop letter_at_curr_pos: {}".format(letter_at_curr_pos))
         special_tile = lookupSpecialTile(curr_pos)
-        # print("calculateWordScore for loop special_tile: {}".format(special_tile))
+        # print("LOG calculateWordScore for loop special_tile: {}".format(special_tile))
         if letter_at_curr_pos is not "" or not special_tile:
             word_score = word_score + letter_score
         elif special_tile == "d":
@@ -453,21 +454,21 @@ def calculateWordScore(clean_board,start_pos, direction, word):
         elif special_tile == "T":
             triple_word_count = triple_word_count +  1
             word_score = word_score + letter_score
-            # print("calculateWordScore for loop triple_word_count: {}".format(str(triple_word_count)))
+            # print("LOG calculateWordScore for loop triple_word_count: {}".format(str(triple_word_count)))
         elif special_tile == "D":
             double_word_count = double_word_count +  1
             word_score = word_score + letter_score
-            # print("calculateWordScore for loop double_word_count: {}".format(str(double_word_count)))
+            # print("LOG calculateWordScore for loop double_word_count: {}".format(str(double_word_count)))
         curr_pos = nextPosition(curr_pos, direction)
-        # print("calculateWordScore for loop word_score: {}".format(str(word_score)))
-        # print("calculateWordScore for loop curr_pos: {}".format(curr_pos))
+        # print("LOG calculateWordScore for loop word_score: {}".format(str(word_score)))
+        # print("LOG calculateWordScore for loop curr_pos: {}".format(curr_pos))
     if triple_word_count > 0:
-        # print("calculateWordScore triple_word_count: {}".format(str(triple_word_count)))
+        # print("LOG calculateWordScore triple_word_count: {}".format(str(triple_word_count)))
         word_score = word_score * triple_word_count * 3
     if double_word_count > 0:
-        # print("calculateWordScore double_word_count: {}".format(str(double_word_count)))
+        # print("LOG calculateWordScore double_word_count: {}".format(str(double_word_count)))
         word_score = word_score * double_word_count * 2
-    # print("calculateWordScore return word_score: {}".format(str(word_score)))
+    # print("LOG calculateWordScore return word_score: {}".format(str(word_score)))
     return word_score
         
 
@@ -505,22 +506,22 @@ def getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction):
 # need to know which letters from hand played in which positions
 def calculatePoints(clean_board, dirty_board, start_position, direction, position_letter_dict, letters):
     total_points = 0
-    # print("calculatePoints start_position: {} direction: {} position_letter_dict: {}".format(start_position, direction, str(position_letter_dict)))
+    # print("LOG calculatePoints start_position: {} direction: {} position_letter_dict: {}".format(start_position, direction, str(position_letter_dict)))
     primary_word = getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction)
-    # print("calculatePoints primary_word: {}".format(primary_word))
+    # print("LOG calculatePoints primary_word: {}".format(primary_word))
     total_points += calculateWordScore(clean_board,start_position,direction, primary_word)
-    # print("calculatePoints total_points after primary word: {}".format(str(total_points)))
+    # print("LOG calculatePoints total_points after primary word: {}".format(str(total_points)))
     opposite_direction = getOppositeDirection(direction)
-    # print("calculatePoints opposite_direction : {}".format(str(opposite_direction)))
+    # print("LOG calculatePoints opposite_direction : {}".format(str(opposite_direction)))
     for pos in position_letter_dict:
-        # print("calculatePoints in for loop: pos : {}".format(pos))
+        # print("LOG calculatePoints in for loop: pos : {}".format(pos))
         first_pos_in_word = getStartPositionOfWordOnBoardAtPositionInDirection(dirty_board, pos, opposite_direction)
-        # print("calculatePoints in for loop: first_pos_in_word : {}".format(first_pos_in_word))
+        # print("LOG calculatePoints in for loop: first_pos_in_word : {}".format(first_pos_in_word))
         adjacent_word = getWordOnBoardAtPositionInDirection(dirty_board, first_pos_in_word, opposite_direction)
-        # print("calculatePoints in for loop: adjacent_word : {}".format(adjacent_word))
+        # print("LOG calculatePoints in for loop: adjacent_word : {}".format(adjacent_word))
         total_points = total_points + calculateWordScore(clean_board, first_pos_in_word, opposite_direction, adjacent_word)
-        # print("calculatePoints in for loop: total_points : {}".format(str(total_points)))
-    # print("calculatePoints returning total_points: {}".format(str(total_points)))
+        # print("LOG calculatePoints in for loop: total_points : {}".format(str(total_points)))
+    # print("LOG calculatePoints returning total_points: {}".format(str(total_points)))
     if len(position_letter_dict) == len(letters):
         total_points = total_points + bingo_bonus
     return total_points
@@ -654,7 +655,7 @@ def bestMove(game, letters): #TODO
                             dirty_board = setWordOnBoard(deepCopyBoard(clean_board), p, w, d)
                             if validateAllWordsOnBoard(dirty_board, False):
                                 score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters)
-                                # print("word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
+                                # print("LOG word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
                                 if score > best_word_score or \
                                     score == best_word_score and len(w) > len(best_word):
                                     best_word_score = score
