@@ -11,34 +11,38 @@ ENABLED_WORD_LIST_KEY="enable_word_list_file"
 ADDED_WORDS_KEY="wwf2_added_word_list_file"
 REMOVED_WORDS_KEY="wwf2_removed_word_list_file"
 CONFIG_DIR_KEY="config_dir"
-TILE_VALUES_KEY="tile_values_file_name"
+TILE_VALUES_FILE_KEY="tile_values_file_name"
 BINGO_BONUS_KEY="bingo_bonus"
 SOLO_STRING_KEY="solo_string"
 SPECIAL_TILES_FILE_KEY="special_tiles_file_name"
-SPECIAL_TILES_KEY="special_tiles"
+SAVED_GAME_DIR_KEY="game_dir"
+POSSIBLE_COLS_KEY="possible_cols"
+ROW_LENGTH_KEY="row_length"
+TEMPLATE_FILE_KEY="tempalte_file"
 
 def setEnvironmentVariables(game_mode):
+    print("GOT HERE")
     os.environ[DICTIONARY_DIR_KEY]="dictionary"
     os.environ[ENABLED_WORD_LIST_KEY]="enable1.txt"
     os.environ[ADDED_WORDS_KEY]="wwf2_added.txt"
     os.environ[REMOVED_WORDS_KEY]="wwf2_removed_word_list_file"
     os.environ[CONFIG_DIR_KEY]="config"
     os.environ[TILE_VALUES_FILE_KEY]="_wwf_tile_values.csv"
-    os.environ[BINGO_BONUS_KEY]=35
+    os.environ[BINGO_BONUS_KEY]="35"
     os.environ[SOLO_STRING_KEY]="solo"
     if game_mode == os.environ[SOLO_STRING_KEY]:
         os.environ[SPECIAL_TILES_FILE_KEY]="_solo_wwf_special_tiles.csv"
         os.environ[SAVED_GAME_DIR_KEY]="solo_games"
         os.environ[POSSIBLE_COLS_KEY]="abcdefghijk"
-        os.environ[ROW_LENGTH_KEY]=11
+        os.environ[ROW_LENGTH_KEY]="11"
         os.environ[TEMPLATE_FILE_KEY]="_solo_template.csv"
     else:
         os.environ[SPECIAL_TILES_FILE_KEY]="_wwf_special_tiles.csv"
         os.environ[SAVED_GAME_DIR_KEY]="games"
         os.environ[POSSIBLE_COLS_KEY]="abcdefghijklmno"
-        os.environ[ROW_LENGTH_KEY]=15
+        os.environ[ROW_LENGTH_KEY]="15"
         os.environ[TEMPLATE_FILE_KEY]="_template.csv"
-    os.environ[SPECIAL_TILES_KEY]= readSpecialTilesAsDict()
+    print(os.environ)
 
 def validateDirection(direction):
     if direction == "vertical" or direction == "v" or direction == "horizontal" or direction == "h":
@@ -66,7 +70,7 @@ def validatePositionRow(row):
     rowAsInt = -1
     try:
         rowAsInt = int(row)
-        return 1 <= rowAsInt <= os.environ[ROW_LENGTH_KEY]
+        return 1 <= rowAsInt <= int(os.environ[ROW_LENGTH_KEY])
     except:
         return False
 
@@ -96,7 +100,12 @@ def getTemplateFilePath():
     return os.path.join(os.getcwd(), os.environ[CONFIG_DIR_KEY], os.environ[TEMPLATE_FILE_KEY])
 
 def getTileValuesFilePath():
-    return os.path.join(os.getcwd(), os.environ[CONFIG_DIR_KEY], os.environ[TILE_VALUES_KEY])
+    print(CONFIG_DIR_KEY)
+    print(TILE_VALUES_FILE_KEY)
+    print(os.environ)
+    print(os.environ[CONFIG_DIR_KEY])
+    print(os.environ[TILE_VALUES_FILE_KEY])
+    return os.path.join(os.getcwd(), os.environ[CONFIG_DIR_KEY], os.environ[TILE_VALUES_FILE_KEY])
 
 def getSpecialTilesFilePath():
     return os.path.join(os.getcwd(), os.environ[CONFIG_DIR_KEY], os.environ[SPECIAL_TILES_FILE_KEY])
@@ -154,7 +163,7 @@ def positionMoveRight(position): # returns next position if valid, else False (a
 def getColumnLetters(board,position):
     column_letters = []
     col = getPositionCol(position)
-    for i in range(os.environ[ROW_LENGTH_KEY]):
+    for i in range(int(os.environ[ROW_LENGTH_KEY])):
         letter = getLetterOnBoardAtPosition(board, buildPosition(col, i+1))
         if letter is not "":
             column_letters.append(letter)
@@ -295,7 +304,7 @@ def writeBoardToFile(game, board):
     f.close()
 
 def printBoard(board):
-    header_row = list(string.ascii_lowercase)[:os.environ[ROW_LENGTH_KEY]]
+    header_row = list(string.ascii_lowercase)[:int(os.environ[ROW_LENGTH_KEY])]
     header_row.insert(0, "")
     for i in range(len(board)):
         board[i].insert(0, i+1)
@@ -310,7 +319,8 @@ def printGame(game):
 
 def printSpecialTiles(): 
     board = readEmptyBoard()
-    for pos, char in os.environ[SPECIAL_TILES_KEY].items():
+    special_tiles=readSpecialTilesAsDict()
+    for pos, char in special_tiles.items():
         setLetterOnBoardAtPosition(char, board, pos)
     printBoard(board)
     
@@ -446,10 +456,10 @@ def wordConnected(board, letters, position, direction, word): #TODO
 def lookupLetterScore(letter):
     return tile_values_dict.get(letter,0)
 
-def lookupSpecialTile(position):
-    return os.environ[SPECIAL_TILES_KEY].get(position, False)
+def lookupSpecialTile(special_tiles, position):
+    return special_tiles.get(position, False)
 
-def calculateWordScore(clean_board,start_pos, direction, word):
+def calculateWordScore(clean_board,start_pos, direction, word, special_tiles):
     word_score = 0
     triple_word_count = 0
     double_word_count = 0
@@ -464,7 +474,7 @@ def calculateWordScore(clean_board,start_pos, direction, word):
         # print("LOG calculateWordScore for loop letter_score: {}".format(letter_score))
         letter_at_curr_pos = getLetterOnBoardAtPosition(clean_board, curr_pos)
         # print("LOG calculateWordScore for loop letter_at_curr_pos: {}".format(letter_at_curr_pos))
-        special_tile = lookupSpecialTile(curr_pos)
+        special_tile = lookupSpecialTile(special_tiles, curr_pos)
         # print("LOG calculateWordScore for loop special_tile: {}".format(special_tile))
         if letter_at_curr_pos is not "" or not special_tile:
             word_score = word_score + letter_score
@@ -525,12 +535,12 @@ def getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction):
 
 # Returns points for given move
 # need to know which letters from hand played in which positions
-def calculatePoints(clean_board, dirty_board, start_position, direction, position_letter_dict, letters):
+def calculatePoints(clean_board, dirty_board, start_position, direction, position_letter_dict, letters, special_tiles):
     total_points = 0
     # print("LOG calculatePoints start_position: {} direction: {} position_letter_dict: {}".format(start_position, direction, str(position_letter_dict)))
     primary_word = getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction)
     # print("LOG calculatePoints primary_word: {}".format(primary_word))
-    total_points += calculateWordScore(clean_board,start_position,direction, primary_word)
+    total_points += calculateWordScore(clean_board,start_position,direction, primary_word, special_tiles)
     # print("LOG calculatePoints total_points after primary word: {}".format(str(total_points)))
     opposite_direction = getOppositeDirection(direction)
     # print("LOG calculatePoints opposite_direction : {}".format(str(opposite_direction)))
@@ -544,7 +554,7 @@ def calculatePoints(clean_board, dirty_board, start_position, direction, positio
         # print("LOG calculatePoints in for loop: total_points : {}".format(str(total_points)))
     # print("LOG calculatePoints returning total_points: {}".format(str(total_points)))
     if len(position_letter_dict) == len(letters):
-        total_points = total_points + bingo_bonus
+        total_points = total_points + int(os.environ["BINGO_BONUS_KEY"])
     return total_points
 
 
@@ -635,6 +645,8 @@ def bestMove(game, letters): #TODO
     all_positions = getListOfAllPositions()
     all_directions =  ["horizontal", "vertical"]
 
+    special_tiles=readSpecialTilesAsDict()
+
     count = 0 # Can remove after TODO
 
     clean_board = readFullBoard(game)
@@ -643,14 +655,14 @@ def bestMove(game, letters): #TODO
 
     col_word_lists = dict()
     row_word_lists = dict()
-    for char in possible_cols:
+    for char in os.environ[POSSIBLE_COLS_KEY]:
         fake_position = buildPosition(char, 1)
         col_letters= getColumnLetters(clean_board, fake_position)
         col_letters.extend(letters)
         col_word_lists[char] = thinWordList(word_list, col_letters, fake_position, "v")
-    for i in range(row_length):
+    for i in range(int(os.environ[ROW_LENGTH_KEY])):
         row_index = str( i + 1 )
-        fake_position = buildPosition(possible_cols[0], row_index)
+        fake_position = buildPosition(os.environ[POSSIBLE_COLS_KEY][0], row_index)
         row_letters = getRowLetters(clean_board, fake_position)
         row_letters.extend(letters)
         row_word_lists[row_index] = thinWordList(word_list, row_letters, fake_position, "h")
@@ -675,7 +687,7 @@ def bestMove(game, letters): #TODO
                                 continue
                             dirty_board = setWordOnBoard(deepCopyBoard(clean_board), p, w, d)
                             if validateAllWordsOnBoard(dirty_board, False):
-                                score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters)
+                                score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters, special_tiles)
                                 # print("LOG word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
                                 if score > best_word_score or \
                                     score == best_word_score and len(w) > len(best_word):
