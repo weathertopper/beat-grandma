@@ -50,4 +50,6 @@ Given a board and a set of in-hand tiles, calculate the word and position of the
 
 ^^ these are all of the flags
 
+Run `make how-to` before doing anything else.
+
 ---

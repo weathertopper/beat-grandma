@@ -5,17 +5,40 @@ import string
 import time
 import copy
 
-dictionary_dir="dictionary"
-enable_word_list_file="enable1.txt"
-wwf2_added_word_list_file="wwf2_added.txt"
-wwf2_removed_word_list_file="wwf2_removed.txt"
-config_dir = "config"
-tile_values_file_name="_wwf_tile_values.csv"
-special_tiles_file_name="_wwf_special_tiles.csv"
-saved_games_dir="games"
-possible_cols = "abcdefghijklmno"
-row_length = 15
-bingo_bonus = 35
+# ENVIRONMENT VARIABLE KEYS
+DICTIONARY_DIR_KEY="dictionary_dir"
+ENABLED_WORD_LIST_KEY="enable_word_list_file"
+ADDED_WORDS_KEY="wwf2_added_word_list_file"
+REMOVED_WORDS_KEY="wwf2_removed_word_list_file"
+CONFIG_DIR_KEY="config_dir"
+TILE_VALUES_KEY="tile_values_file_name"
+BINGO_BONUS_KEY="bingo_bonus"
+SOLO_STRING_KEY="solo_string"
+SPECIAL_TILES_FILE_KEY="special_tiles_file_name"
+SPECIAL_TILES_KEY="special_tiles"
+
+def setEnvironmentVariables(game_mode):
+    os.environ[DICTIONARY_DIR_KEY]="dictionary"
+    os.environ[ENABLED_WORD_LIST_KEY]="enable1.txt"
+    os.environ[ADDED_WORDS_KEY]="wwf2_added.txt"
+    os.environ[REMOVED_WORDS_KEY]="wwf2_removed_word_list_file"
+    os.environ[CONFIG_DIR_KEY]="config"
+    os.environ[TILE_VALUES_FILE_KEY]="_wwf_tile_values.csv"
+    os.environ[BINGO_BONUS_KEY]=35
+    os.environ[SOLO_STRING_KEY]="solo"
+    if game_mode == os.environ[SOLO_STRING_KEY]:
+        os.environ[SPECIAL_TILES_FILE_KEY]="_solo_wwf_special_tiles.csv"
+        os.environ[SAVED_GAME_DIR_KEY]="solo_games"
+        os.environ[POSSIBLE_COLS_KEY]="abcdefghijk"
+        os.environ[ROW_LENGTH_KEY]=11
+        os.environ[TEMPLATE_FILE_KEY]="_solo_template.csv"
+    else:
+        os.environ[SPECIAL_TILES_FILE_KEY]="_wwf_special_tiles.csv"
+        os.environ[SAVED_GAME_DIR_KEY]="games"
+        os.environ[POSSIBLE_COLS_KEY]="abcdefghijklmno"
+        os.environ[ROW_LENGTH_KEY]=15
+        os.environ[TEMPLATE_FILE_KEY]="_template.csv"
+    os.environ[SPECIAL_TILES_KEY]= readSpecialTilesAsDict()
 
 def validateDirection(direction):
     if direction == "vertical" or direction == "v" or direction == "horizontal" or direction == "h":
@@ -43,12 +66,12 @@ def validatePositionRow(row):
     rowAsInt = -1
     try:
         rowAsInt = int(row)
-        return 1 <= rowAsInt <= row_length
+        return 1 <= rowAsInt <= os.environ[ROW_LENGTH_KEY]
     except:
         return False
 
 def validatePositionCol(col):
-    return col in possible_cols
+    return col in os.environ[POSSIBLE_COLS_KEY]
 
 def validatePosition(position):
     col = getPositionCol(position)
@@ -58,25 +81,25 @@ def validatePosition(position):
     return False
 
 def getGameFilePath(game):
-    return os.path.join(os.getcwd(), saved_games_dir, "{}.csv".format(game))
+    return os.path.join(os.getcwd(), os.environ[SAVED_GAME_DIR_KEY], "{}.csv".format(game))
 
 def getEnableWordFilePath():
-    return os.path.join(os.getcwd(), dictionary_dir, enable_word_list_file)
+    return os.path.join(os.getcwd(), os.environ[DICTIONARY_DIR_KEY], os.environ[ENABLED_WORD_LIST_KEY])
 
 def getWWF2AddedWordFilePath():
-    return os.path.join(os.getcwd(), dictionary_dir, wwf2_added_word_list_file)
+    return os.path.join(os.getcwd(), os.environ[DICTIONARY_DIR_KEY], os.environ[ADDED_WORDS_KEY])
 
 def getWWF2RemovedWordFilePath():
-    return os.path.join(os.getcwd(), dictionary_dir, wwf2_removed_word_list_file)
+    return os.path.join(os.getcwd(), os.environ[DICTIONARY_DIR_KEY], os.environ[REMOVED_WORDS_KEY])
 
 def getTemplateFilePath():
-    return os.path.join(os.getcwd(), config_dir, "_template.csv")
+    return os.path.join(os.getcwd(), os.environ[CONFIG_DIR_KEY], os.environ[TEMPLATE_FILE_KEY])
 
 def getTileValuesFilePath():
-    return os.path.join(os.getcwd(), config_dir, tile_values_file_name)
+    return os.path.join(os.getcwd(), os.environ[CONFIG_DIR_KEY], os.environ[TILE_VALUES_KEY])
 
 def getSpecialTilesFilePath():
-    return os.path.join(os.getcwd(), config_dir, special_tiles_file_name)
+    return os.path.join(os.getcwd(), os.environ[CONFIG_DIR_KEY], os.environ[SPECIAL_TILES_FILE_KEY])
 
 def getPositionRow(position): #i.e. the number
     if validatePositionLength(position):
@@ -89,7 +112,7 @@ def getPositionCol(position): #i.e. the letter
     return False
 
 def getPositionColIndex(position): #i.e. the index of the letter
-    return possible_cols.find(getPositionCol(position))
+    return os.environ[POSSIBLE_COLS_KEY].find(getPositionCol(position))
 
 def buildPosition(col, row): # assumes col and row are valid
     return col + str(row)
@@ -117,21 +140,21 @@ def positionMoveDown(position): # returns next position if valid, else False (as
 def positionMoveLeft(position): # returns next position if valid, else False (assumes position is valid)
     prev_col_index = getPositionColIndex(position) - 1
     if prev_col_index > -1:
-        left_col = possible_cols[prev_col_index]
+        left_col = os.environ[POSSIBLE_COLS_KEY][prev_col_index]
         return buildPosition(left_col, getPositionRow(position))
     return False
 
 def positionMoveRight(position): # returns next position if valid, else False (assumes position is valid)
     next_col_index = getPositionColIndex(position) + 1
-    if next_col_index < len(possible_cols):    
-        right_col = possible_cols[next_col_index]
+    if next_col_index < len(os.environ[POSSIBLE_COLS_KEY]):    
+        right_col = os.environ[POSSIBLE_COLS_KEY][next_col_index]
         return buildPosition(right_col, getPositionRow(position))
     return False
 
 def getColumnLetters(board,position):
     column_letters = []
     col = getPositionCol(position)
-    for i in range(row_length):
+    for i in range(os.environ[ROW_LENGTH_KEY]):
         letter = getLetterOnBoardAtPosition(board, buildPosition(col, i+1))
         if letter is not "":
             column_letters.append(letter)
@@ -140,14 +163,14 @@ def getColumnLetters(board,position):
 def getRowLetters(board, position):
     row_letters = []
     row = getPositionRow(position)
-    for char in possible_cols:
+    for char in os.environ[POSSIBLE_COLS_KEY]:
         letter = getLetterOnBoardAtPosition(board, buildPosition(char, row))
         if letter is not "":
             row_letters.append(letter)
     return row_letters 
 
-def testInput(command, game, letters, position, word, direction):
-    print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}".format(command, game, letters, position, word, direction))
+def testInput(command, game, letters, position, word, direction, game_mode):
+    print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {} game_mode: {}".format(command, game, letters, position, word, direction, game_mode))
 
 def createGame(game):
     template_file = getTemplateFilePath()
@@ -216,8 +239,6 @@ def readSpecialTilesAsDict():
         special_tiles[position] = special_char
     return special_tiles
 
-special_tiles = readSpecialTilesAsDict()
-
 def boardToPrettyString(board):
     # script kiddie!
     # https://stackoverflow.com/a/13214945
@@ -274,7 +295,7 @@ def writeBoardToFile(game, board):
     f.close()
 
 def printBoard(board):
-    header_row = list(string.ascii_lowercase)[:15]
+    header_row = list(string.ascii_lowercase)[:os.environ[ROW_LENGTH_KEY]]
     header_row.insert(0, "")
     for i in range(len(board)):
         board[i].insert(0, i+1)
@@ -289,7 +310,7 @@ def printGame(game):
 
 def printSpecialTiles(): 
     board = readEmptyBoard()
-    for pos, char in special_tiles.items():
+    for pos, char in os.environ[SPECIAL_TILES_KEY].items():
         setLetterOnBoardAtPosition(char, board, pos)
     printBoard(board)
     
@@ -426,7 +447,7 @@ def lookupLetterScore(letter):
     return tile_values_dict.get(letter,0)
 
 def lookupSpecialTile(position):
-    return special_tiles.get(position, False)
+    return os.environ[SPECIAL_TILES_KEY].get(position, False)
 
 def calculateWordScore(clean_board,start_pos, direction, word):
     word_score = 0
@@ -683,11 +704,13 @@ def bestMove(game, letters): #TODO
 @click.option('--position', '-p')
 @click.option('--word', '-w')
 @click.option('--direction', '-d')
+@click.option('--game-mode', '-m')
 
 # DRIVER
-def main(command, game, letters, position, word, direction):
+def main(command, game, letters, position, word, direction, game_mode):
+    setEnvironmentVariables(game_mode)
     if command == "test":
-        testInput(command, game, letters, position, word, direction)
+        testInput(command, game, letters, position, word, direction, game_mode)
     elif command == "new-game":
         createGame(game)
     elif command == "delete-game": 
