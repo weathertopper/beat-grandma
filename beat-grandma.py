@@ -21,7 +21,6 @@ ROW_LENGTH_KEY="row_length"
 TEMPLATE_FILE_KEY="tempalte_file"
 
 def setEnvironmentVariables(game_mode):
-    print("GOT HERE")
     os.environ[DICTIONARY_DIR_KEY]="dictionary"
     os.environ[ENABLED_WORD_LIST_KEY]="enable1.txt"
     os.environ[ADDED_WORDS_KEY]="wwf2_added.txt"
@@ -42,7 +41,6 @@ def setEnvironmentVariables(game_mode):
         os.environ[POSSIBLE_COLS_KEY]="abcdefghijklmno"
         os.environ[ROW_LENGTH_KEY]="15"
         os.environ[TEMPLATE_FILE_KEY]="_template.csv"
-    print(os.environ)
 
 def validateDirection(direction):
     if direction == "vertical" or direction == "v" or direction == "horizontal" or direction == "h":
@@ -100,11 +98,6 @@ def getTemplateFilePath():
     return os.path.join(os.getcwd(), os.environ[CONFIG_DIR_KEY], os.environ[TEMPLATE_FILE_KEY])
 
 def getTileValuesFilePath():
-    print(CONFIG_DIR_KEY)
-    print(TILE_VALUES_FILE_KEY)
-    print(os.environ)
-    print(os.environ[CONFIG_DIR_KEY])
-    print(os.environ[TILE_VALUES_FILE_KEY])
     return os.path.join(os.getcwd(), os.environ[CONFIG_DIR_KEY], os.environ[TILE_VALUES_FILE_KEY])
 
 def getSpecialTilesFilePath():
@@ -179,7 +172,7 @@ def getRowLetters(board, position):
     return row_letters 
 
 def testInput(command, game, letters, position, word, direction, game_mode):
-    print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {} game_mode: {}".format(command, game, letters, position, word, direction, game_mode))
+    print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}\n game_mode: {}\n".format(command, game, letters, position, word, direction, game_mode))
 
 def createGame(game):
     template_file = getTemplateFilePath()
@@ -223,8 +216,6 @@ def readTileValuesAsDict():
         tile_val = r.split(",")
         tile_values[tile_val[0]] = tile_val[1]
     return tile_values
-
-tile_values_dict = readTileValuesAsDict()
 
 def specialStringToCharacter(special_string):
     special_characters = { 
