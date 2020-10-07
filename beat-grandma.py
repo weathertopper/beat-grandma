@@ -5,6 +5,7 @@ import string
 import time
 import copy
 
+ALIAS_SHORTHAND="bg"
 # ENVIRONMENT VARIABLE KEYS
 DICTIONARY_DIR_KEY="dictionary_dir"
 ENABLED_WORD_LIST_KEY="enable_word_list_file"
@@ -18,7 +19,7 @@ SPECIAL_TILES_FILE_KEY="special_tiles_file_name"
 SAVED_GAME_DIR_KEY="game_dir"
 POSSIBLE_COLS_KEY="possible_cols"
 ROW_LENGTH_KEY="row_length"
-TEMPLATE_FILE_KEY="tempalte_file"
+TEMPLATE_FILE_KEY="template_file"
 
 def setEnvironmentVariables(game_mode):
     os.environ[DICTIONARY_DIR_KEY]="dictionary"
@@ -178,6 +179,7 @@ def createGame(game):
     template_file = getTemplateFilePath()
     copy_file = getGameFilePath(game)
     shutil.copyfile(template_file, copy_file)
+    printGame(game)
 
 def deleteGame(game):
     if validateGame(game):
@@ -283,6 +285,7 @@ def setWord(game, position, word, direction):
     board = setWordOnBoard(readFullBoard(game), position, word, direction)
     writeBoardToFile(game, board)
     print(" Set word {} at position {} in direction {} for game {}\n".format(word, position, direction, game))
+    printGame(game)
 
 def writeBoardToFile(game, board):
     board_as_string = ""
@@ -697,7 +700,7 @@ def bestMove(game, letters): #TODO
     print("Score: " + str(best_word_score))
     print("Total Time: " + str(time.time() - time_start))
     print("Total count: " + str(count))
-    print ("set-word -g {} -p {} -d {} -w {}".format(game, best_word_position, best_word_direction, best_word))
+    print ("{} -p {} -d {} -w {}".format(ALIAS_SHORTHAND, best_word_position, best_word_direction, best_word))
 
 
 # CLI INPUTS
