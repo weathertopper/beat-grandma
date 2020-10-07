@@ -24,7 +24,7 @@ def setEnvironmentVariables(game_mode):
     os.environ[DICTIONARY_DIR_KEY]="dictionary"
     os.environ[ENABLED_WORD_LIST_KEY]="enable1.txt"
     os.environ[ADDED_WORDS_KEY]="wwf2_added.txt"
-    os.environ[REMOVED_WORDS_KEY]="wwf2_removed_word_list_file"
+    os.environ[REMOVED_WORDS_KEY]="wwf2_removed.txt"
     os.environ[CONFIG_DIR_KEY]="config"
     os.environ[TILE_VALUES_FILE_KEY]="_wwf_tile_values.csv"
     os.environ[BINGO_BONUS_KEY]="35"
@@ -323,8 +323,8 @@ def printTileValues():
 
 def getListOfAllPositions(): 
     all_positions = []
-    for char in possible_cols:
-        for i in range(row_length):
+    for char in os.environ[POSSIBLE_COLS_KEY]:
+        for i in range(int(os.environ[ROW_LENGTH_KEY])):
             all_positions.insert(len(all_positions), buildPosition(char, i+1))
     return all_positions
 
@@ -444,13 +444,13 @@ def wordConnected(board, letters, position, direction, word): #TODO
             return True
     return False
 
-def lookupLetterScore(letter):
+def lookupLetterScore(letter, tile_values_dict):
     return tile_values_dict.get(letter,0)
 
 def lookupSpecialTile(special_tiles, position):
     return special_tiles.get(position, False)
 
-def calculateWordScore(clean_board,start_pos, direction, word, special_tiles):
+def calculateWordScore(clean_board,start_pos, direction, word, special_tiles, tile_values_dict):
     word_score = 0
     triple_word_count = 0
     double_word_count = 0
@@ -461,7 +461,7 @@ def calculateWordScore(clean_board,start_pos, direction, word, special_tiles):
         return 0
     for letter in word:
         # print("LOG calculateWordScore for loop letter: {}".format(letter))
-        letter_score = int(lookupLetterScore(letter))
+        letter_score = int(lookupLetterScore(letter, tile_values_dict))
         # print("LOG calculateWordScore for loop letter_score: {}".format(letter_score))
         letter_at_curr_pos = getLetterOnBoardAtPosition(clean_board, curr_pos)
         # print("LOG calculateWordScore for loop letter_at_curr_pos: {}".format(letter_at_curr_pos))
@@ -526,12 +526,12 @@ def getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction):
 
 # Returns points for given move
 # need to know which letters from hand played in which positions
-def calculatePoints(clean_board, dirty_board, start_position, direction, position_letter_dict, letters, special_tiles):
+def calculatePoints(clean_board, dirty_board, start_position, direction, position_letter_dict, letters, special_tiles, tile_values_dict):
     total_points = 0
     # print("LOG calculatePoints start_position: {} direction: {} position_letter_dict: {}".format(start_position, direction, str(position_letter_dict)))
     primary_word = getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction)
     # print("LOG calculatePoints primary_word: {}".format(primary_word))
-    total_points += calculateWordScore(clean_board,start_position,direction, primary_word, special_tiles)
+    total_points += calculateWordScore(clean_board,start_position,direction, primary_word, special_tiles, tile_values_dict)
     # print("LOG calculatePoints total_points after primary word: {}".format(str(total_points)))
     opposite_direction = getOppositeDirection(direction)
     # print("LOG calculatePoints opposite_direction : {}".format(str(opposite_direction)))
@@ -541,7 +541,7 @@ def calculatePoints(clean_board, dirty_board, start_position, direction, positio
         # print("LOG calculatePoints in for loop: first_pos_in_word : {}".format(first_pos_in_word))
         adjacent_word = getWordOnBoardAtPositionInDirection(dirty_board, first_pos_in_word, opposite_direction)
         # print("LOG calculatePoints in for loop: adjacent_word : {}".format(adjacent_word))
-        total_points = total_points + calculateWordScore(clean_board, first_pos_in_word, opposite_direction, adjacent_word)
+        total_points = total_points + calculateWordScore(clean_board, first_pos_in_word, opposite_direction, adjacent_word, special_tiles, tile_values_dict)
         # print("LOG calculatePoints in for loop: total_points : {}".format(str(total_points)))
     # print("LOG calculatePoints returning total_points: {}".format(str(total_points)))
     if len(position_letter_dict) == len(letters):
@@ -564,7 +564,7 @@ def validateAllWordsOnBoard(board, print_errors):
 
 def genericWordListThinning(word_list):
     # print("genericWordListThinning start len: {}".format(str(len(word_list))))
-    max_len = max(row_length, len(possible_cols))
+    max_len = max(int(os.environ[ROW_LENGTH_KEY]), len(os.environ[POSSIBLE_COLS_KEY]))
     thinned = filter(lambda x: len(x) <= max_len, word_list) # removing words that are too long
     # print("genericWordListThinning end len: {}".format(str(len(thinned))))
     return thinned
@@ -584,10 +584,10 @@ def getWordsOnBoard(board):
     word_candidates= []
     for row in board:
         word = ""
-        for i in range(len(possible_cols)):
+        for i in range(len(os.environ[POSSIBLE_COLS_KEY])):
             col = i + 1
             c = row[i]
-            if c == "" or col == len(possible_cols):
+            if c == "" or col == len(os.environ[POSSIBLE_COLS_KEY]):
                 if c != "":
                     word += c
                 if word != "":
@@ -596,13 +596,13 @@ def getWordsOnBoard(board):
             else:
                 word += c
 
-    for col in possible_cols:
+    for col in os.environ[POSSIBLE_COLS_KEY]:
         word = ""
-        for i in range(row_length):
+        for i in range(int(os.environ[ROW_LENGTH_KEY])):
             row = i + 1
             pos = buildPosition(col, row)
             c = getLetterOnBoardAtPosition(board, pos)
-            if c == "" or row == row_length :
+            if c == "" or row == int(os.environ[ROW_LENGTH_KEY]) :
                 if c != "":
                     word += c
                 if word != "":
@@ -637,6 +637,7 @@ def bestMove(game, letters): #TODO
     all_directions =  ["horizontal", "vertical"]
 
     special_tiles=readSpecialTilesAsDict()
+    tile_values_dict=readTileValuesAsDict()
 
     count = 0 # Can remove after TODO
 
@@ -678,7 +679,7 @@ def bestMove(game, letters): #TODO
                                 continue
                             dirty_board = setWordOnBoard(deepCopyBoard(clean_board), p, w, d)
                             if validateAllWordsOnBoard(dirty_board, False):
-                                score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters, special_tiles)
+                                score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters, special_tiles, tile_values_dict)
                                 # print("LOG word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
                                 if score > best_word_score or \
                                     score == best_word_score and len(w) > len(best_word):
