@@ -360,7 +360,8 @@ def previousPosition(position, direction):
 
 # Returns True if:
 # Word fits on board (meaning spaces don't run out and spaces aren't already taken)
-def wordFits(board, letters, position, direction, word):
+def wordFits(board, letters, position, direction, word, blank_tile_count):
+    blank_count_copy = copy.deepcopy(blank_tile_count)
     curr_pos = position
     for letter_in_word in word:
         if not curr_pos:
@@ -369,16 +370,22 @@ def wordFits(board, letters, position, direction, word):
         if letter_on_board == letter_in_word or letter_on_board == "":
             curr_pos = nextPosition(curr_pos, direction)
         else:
-            return False
+            if blank_count_copy > 0:
+                blank_count_copy = blank_count_copy - 1
+                curr_pos = nextPosition(curr_pos, direction)
+            else:
+                return False
     return True
 
 # Returns True if:
 # Word can be played with letters on board AND at least one letter from hand
-def wordPlayable(board, letters, position, direction, word): #TODO
+def wordPlayable(board, letters, position, direction, word, blank_tile_count): #TODO
     # print("LOG wordPlayable: word {} letters {} position {} direction {}".format(word, letters, position, direction))
     letters_to_use = copy.deepcopy(letters)
+    blanks_available_count = copy.deepcopy(blank_tile_count)
     # print("LOG wordPlayable: letters_to_use {}".format(letters_to_use))
     used_letters = {}
+    blanks_used_count = 0
     curr_pos = position
     # print("LOG wordPlayable: curr_pos {}".format(curr_pos))
     for letter_in_word in word:
@@ -396,11 +403,15 @@ def wordPlayable(board, letters, position, direction, word): #TODO
             letters_to_use.remove(letter_in_word)
             # print("LOG wordPlayable: for loop letter_in_word {}".format(letter_in_word))
         else:
-            # print("LOG wordPlayable: for loop returning false")
-            return False
+            if blanks_available_count > 0:
+                blanks_available_count = blanks_available_count -1
+                blanks_used_count = blanks_used_count + 1
+            else:
+                # print("LOG wordPlayable: for loop returning false")
+                return False
         curr_pos = nextPosition(curr_pos, direction)
-        # print("LOG wordPlayable: curr pos nextt pos {}".format(curr_pos))
-    return used_letters # empty dict gives bool value of False
+        # print("LOG wordPlayable: curr pos next pos {}".format(curr_pos))
+    return bool(used_letters) or bool(blanks_used_count) # empty dict or 0 gives bool value of False
 
 
 def getAdjacentPositions(position,direction):
@@ -688,9 +699,10 @@ def bestMove(game, letters, blank_tiles): #TODO
             for w in thinned_word_list:
                 if w is "":
                     continue
-                if wordFits(clean_board, letters, p, d, w):
-                    if wordPlayable(clean_board, letters, p, d, w):
+                if wordFits(clean_board, letters, p, d, w, blank_tile_count):
+                    if wordPlayable(clean_board, letters, p, d, w, blank_tile_count):
                         if wordConnected(clean_board, letters, p, d, w):
+                            # figure out where to play blank tiles here?
                             letters_to_play = getLettersPlayed(clean_board, p, d, w)
                             if not letters_to_play: # no letters to play-- word is complete already
                                 continue
