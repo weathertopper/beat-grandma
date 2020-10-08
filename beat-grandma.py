@@ -173,7 +173,7 @@ def getRowLetters(board, position):
     return row_letters 
 
 def testInput(command, game, letters, position, word, direction, game_mode):
-    print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}\n game_mode: {}\n".format(command, game, letters, position, word, direction, game_mode))
+    print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}\n game_mode: {}\n blank_tiles: {}\n".format(command, game, letters, position, word, direction, game_mode, blank_tiles))
 
 def createGame(game):
     template_file = getTemplateFilePath()
@@ -551,8 +551,6 @@ def calculatePoints(clean_board, dirty_board, start_position, direction, positio
         total_points = total_points + int(os.environ["BINGO_BONUS_KEY"])
     return total_points
 
-
-
 # Returns True if:
 # All words on board exist in dictionary list
 def validateAllWordsOnBoard(board, print_errors):
@@ -572,15 +570,16 @@ def genericWordListThinning(word_list):
     # print("genericWordListThinning end len: {}".format(str(len(thinned))))
     return thinned
 
-def thinWordList(word_list, letters, position, direction):
+def thinWordList(word_list, letters, position, direction, blank_tile_count):
     # print("thinWordList position: {} direction: {} start len: {}".format(position, direction, str(len(word_list))))
+    check_length = len(letters) + blank_tile_count
     thinned_by_len = filter(lambda x: len(x) <= len(letters), word_list) 
     def containsLettersToFormWord(word):
         """ Check whether sequence str contains ALL of the items in set. """
         return 0 not in [c in letters for c in word]
-    thinned = filter(containsLettersToFormWord, thinned_by_len)
+    # thinned = filter(containsLettersToFormWord, thinned_by_len)
     # print("thinWordList position: {} direction: {} end len: {}".format(position, direction, str(len(thinned))))
-    return thinned
+    return thinned_by_len
 
 
 def getWordsOnBoard(board):
@@ -620,10 +619,14 @@ def getWordsOnBoard(board):
             words.append(word)
     return words
 
-def bestMove(game, letters): #TODO
+def bestMove(game, letters, blank_tiles): #TODO
     letters = list(letters)
     game_valid = validateGame(game)
     letters_valid = validateLetters(letters)
+
+    blank_tile_count = 0
+    if blank_tiles:
+        blank_tile_count = int(blank_tiles)
 
     if not (game_valid and letters_valid):
         print(" ERROR: Something not valid. Game Valid: {}; Letters Valid: {}".format(game_valid, letters_valid))
@@ -654,13 +657,13 @@ def bestMove(game, letters): #TODO
         fake_position = buildPosition(char, 1)
         col_letters= getColumnLetters(clean_board, fake_position)
         col_letters.extend(letters)
-        col_word_lists[char] = thinWordList(word_list, col_letters, fake_position, "v")
+        col_word_lists[char] = thinWordList(word_list, col_letters, fake_position, "v", blank_tile_count)
     for i in range(int(os.environ[ROW_LENGTH_KEY])):
         row_index = str( i + 1 )
         fake_position = buildPosition(os.environ[POSSIBLE_COLS_KEY][0], row_index)
         row_letters = getRowLetters(clean_board, fake_position)
         row_letters.extend(letters)
-        row_word_lists[row_index] = thinWordList(word_list, row_letters, fake_position, "h")
+        row_word_lists[row_index] = thinWordList(word_list, row_letters, fake_position, "h", blank_tile_count)
 
     if not validateAllWordsOnBoard(clean_board, True):
         print("Starting with an invalid board!")
@@ -712,12 +715,13 @@ def bestMove(game, letters): #TODO
 @click.option('--word', '-w')
 @click.option('--direction', '-d')
 @click.option('--game-mode', '-m')
+@click.option('--blank-tiles', '-b')
 
 # DRIVER
-def main(command, game, letters, position, word, direction, game_mode):
+def main(command, game, letters, position, word, direction, game_mode, blank_tiles):
     setEnvironmentVariables(game_mode)
     if command == "test":
-        testInput(command, game, letters, position, word, direction, game_mode)
+        testInput(command, game, letters, position, word, direction, game_mode, blank_tiles)
     elif command == "new-game":
         createGame(game)
     elif command == "delete-game": 
@@ -731,7 +735,7 @@ def main(command, game, letters, position, word, direction, game_mode):
     elif command == "print-tile-values":
         printTileValues()
     elif command == "best-move":
-        bestMove(game, letters)
+        bestMove(game, letters, blank_tiles)
     else:
         print("Say what?")
 
