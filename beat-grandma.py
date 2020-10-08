@@ -172,7 +172,7 @@ def getRowLetters(board, position):
             row_letters.append(letter)
     return row_letters 
 
-def testInput(command, game, letters, position, word, direction, game_mode):
+def testInput(command, game, letters, position, word, direction, game_mode, blank_tiles):
     print(" command: {}\n game: {}\n letters: {}\n position: {}\n word: {}\n direction: {}\n game_mode: {}\n blank_tiles: {}\n".format(command, game, letters, position, word, direction, game_mode, blank_tiles))
 
 def createGame(game):
@@ -570,17 +570,28 @@ def genericWordListThinning(word_list):
     # print("genericWordListThinning end len: {}".format(str(len(thinned))))
     return thinned
 
-def thinWordList(word_list, letters, position, direction, blank_tile_count):
-    # print("thinWordList position: {} direction: {} start len: {}".format(position, direction, str(len(word_list))))
-    check_length = len(letters) + blank_tile_count
+def thinWordList(word_list, letters, blank_count):
+    # print("thinWordList:\n word_list: {}\n letters: {}\n".format(word_list, letters))
     thinned_by_len = filter(lambda x: len(x) <= len(letters), word_list) 
-    def containsLettersToFormWord(word):
-        """ Check whether sequence str contains ALL of the items in set. """
-        return 0 not in [c in letters for c in word]
-    # thinned = filter(containsLettersToFormWord, thinned_by_len)
-    # print("thinWordList position: {} direction: {} end len: {}".format(position, direction, str(len(thinned))))
-    return thinned_by_len
-
+    thinned = []
+    for word in thinned_by_len:
+        letters_copy=copy.deepcopy(letters)
+        blank_count_copy=copy.deepcopy(blank_count)
+        word_possible=True
+        for char in word:
+            if char in letters_copy:
+               letters_copy.replace(char, "", 1)
+            else:
+                if blank_count_copy > 0:
+                    blank_count_copy = blank_count_copy - 1
+                else:
+                    word_possible=False
+                    break
+        if word_possible:
+            thinned.append(word)
+    print("thinWordList: END COUNT {}\n".format(len(thinned)))
+    return thinned
+            
 
 def getWordsOnBoard(board):
     word_candidates= []
@@ -657,13 +668,13 @@ def bestMove(game, letters, blank_tiles): #TODO
         fake_position = buildPosition(char, 1)
         col_letters= getColumnLetters(clean_board, fake_position)
         col_letters.extend(letters)
-        col_word_lists[char] = thinWordList(word_list, col_letters, fake_position, "v", blank_tile_count)
+        col_word_lists[char] = thinWordList(word_list, col_letters, blank_tile_count)
     for i in range(int(os.environ[ROW_LENGTH_KEY])):
         row_index = str( i + 1 )
         fake_position = buildPosition(os.environ[POSSIBLE_COLS_KEY][0], row_index)
         row_letters = getRowLetters(clean_board, fake_position)
         row_letters.extend(letters)
-        row_word_lists[row_index] = thinWordList(word_list, row_letters, fake_position, "h", blank_tile_count)
+        row_word_lists[row_index] = thinWordList(word_list, row_letters, blank_tile_count)
 
     if not validateAllWordsOnBoard(clean_board, True):
         print("Starting with an invalid board!")
