@@ -573,7 +573,7 @@ def genericWordListThinning(word_list):
     return thinned
 
 def thinWordList(word_list, letters):
-    print("thinWordList:\n word_list: {}\n letters: {}\n".format(word_list, letters))
+    # print("thinWordList:\n word_list: {}\n letters: {}\n".format(word_list, letters))
     thinned_by_len = filter(lambda x: len(x) <= len(letters), word_list) 
     thinned = []
     for word in thinned_by_len:
@@ -587,7 +587,7 @@ def thinWordList(word_list, letters):
                 break
         if word_possible:
             thinned.append(word)
-    print("thinWordList: END COUNT {}\n".format(len(thinned)))
+    # print("thinWordList: END COUNT {}\n".format(len(thinned)))
     return thinned
             
 
@@ -735,14 +735,7 @@ def bestMove(game, letters): #TODO
 def main(command, game, letters, position, word, direction, game_mode):
     setEnvironmentVariables(game_mode)
     if command == "test":
-        word_list=buildWordList()
-        time_start = time.time()
-        thinWordList(word_list, letters)
-        print("Thinning Time: " + str(time.time() - time_start))
-        # call thinned with timer
-        # poop out here
-
-        # testInput(command, game, letters, position, word, direction, game_mode)
+        testInput(command, game, letters, position, word, direction, game_mode)
     elif command == "new-game":
         createGame(game)
     elif command == "delete-game": 
