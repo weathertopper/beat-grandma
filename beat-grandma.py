@@ -572,9 +572,27 @@ def genericWordListThinning(word_list):
     # print("genericWordListThinning end len: {}".format(str(len(thinned))))
     return thinned
 
-def thinWordList(word_list, letters, position, direction):
-    # print("thinWordList position: {} direction: {} start len: {}".format(position, direction, str(len(word_list))))
+def thinWordList(word_list, letters):
+    # print("thinWordList:\n word_list: {}\n letters: {}\n".format(word_list, letters))
     thinned_by_len = filter(lambda x: len(x) <= len(letters), word_list) 
+    thinned = []
+    for word in thinned_by_len:
+        letters_copy=copy.deepcopy(letters)
+        word_possible=True
+        for char in word:
+            if char in letters_copy:
+               letters_copy.remove(char)
+            else:
+                word_possible=False
+                break
+        if word_possible:
+            thinned.append(word)
+    # print("thinWordList: END COUNT {}\n".format(len(thinned)))
+    return thinned
+            
+
+
+
     def containsLettersToFormWord(word):
         """ Check whether sequence str contains ALL of the items in set. """
         return 0 not in [c in letters for c in word]
@@ -654,13 +672,13 @@ def bestMove(game, letters): #TODO
         fake_position = buildPosition(char, 1)
         col_letters= getColumnLetters(clean_board, fake_position)
         col_letters.extend(letters)
-        col_word_lists[char] = thinWordList(word_list, col_letters, fake_position, "v")
+        col_word_lists[char] = thinWordList(word_list, col_letters)
     for i in range(int(os.environ[ROW_LENGTH_KEY])):
         row_index = str( i + 1 )
         fake_position = buildPosition(os.environ[POSSIBLE_COLS_KEY][0], row_index)
         row_letters = getRowLetters(clean_board, fake_position)
         row_letters.extend(letters)
-        row_word_lists[row_index] = thinWordList(word_list, row_letters, fake_position, "h")
+        row_word_lists[row_index] = thinWordList(word_list, row_letters)
 
     if not validateAllWordsOnBoard(clean_board, True):
         print("Starting with an invalid board!")
