@@ -62,7 +62,9 @@ def validateDirection(direction):
     return False
 
 def validateWord(word):
-    return len(word) > 0
+    if word:
+        return len(word) > 0
+    return False
 
 def validateGame(game):
     game_file = getGameFilePath(game)
@@ -832,7 +834,7 @@ def decideBestMove(score, word, position, direction, blanks_to_play):
         BEST_WORD_POSITION = position
         BEST_WORD_DIRECTION = direction
         BEST_WORD_BLANK_POSITIONS = blanks_to_play
-        print("CURRENT BEST WORD: Word {} Position {} Direction {} Score {} Blanks: {}".format(BEST_WORD, BEST_WORD_POSITION, BEST_WORD_DIRECTION, str(BEST_WORD_SCORE), BEST_WORD_BLANK_POSITIONS))
+        print("CURRENT BEST WORD: Word {} Score {} Blanks: {} Position {} Direction {}".format(BEST_WORD, str(BEST_WORD_SCORE), BEST_WORD_BLANK_POSITIONS, BEST_WORD_POSITION, BEST_WORD_DIRECTION))
 
 def printBestMove(start_time, end_time, count):
     global BEST_WORD
