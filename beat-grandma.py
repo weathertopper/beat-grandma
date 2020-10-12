@@ -304,7 +304,7 @@ def getLetterOnBoardAtPosition(board, position): # assumes position valid
     col_index = getPositionColIndex(position)
     return board[row_index][col_index]
 
-def setWordOnBoard(board, position, word, direction):
+def setWordOnBoard(board, position, word, direction, game):
     curr_pos = position
     for i in range(len(word)):
         board = setLetterOnBoardAtPosition(word[i], board, curr_pos)
@@ -325,7 +325,7 @@ def setWord(game, position, word, direction):
     if not (game_valid and direction_valid and position_valid and word_valid):
         print(" ERROR: Something not valid. Game Valid: {}; Direction Valid: {}; Position Valid: {}; Word Valid: {}".format(game_valid, direction_valid, position_valid, word_valid))
         return False
-    board = setWordOnBoard(readFullBoard(game), position, word, direction)
+    board = setWordOnBoard(readFullBoard(game), position, word, direction, game)
     writeBoardToFile(game, board)
     print(" Set word {} at position {} in direction {} for game {}\n".format(word, position, direction, game))
     printGame(game)
@@ -363,7 +363,8 @@ def printSpecialTiles():
     
 
 def printTileValues():
-    print ("TILE VALUES")
+    # print ("TILE VALUES")
+    tile_values_dict=readTileValuesAsDict()
     for t, v in tile_values_dict.items():
         print(t + " : " + v)
 
@@ -558,8 +559,9 @@ def calculateWordScore(clean_board,start_pos, direction, word, special_tiles, ti
         # print("LOG all_blank_positions: {}".forum(all_blank_positions))
         # print("LOG curr_pos: {}".format(curr_pos))
         if curr_pos in all_blank_positions:
-            unused=0
-        elif letter_at_curr_pos is not "" or not special_tile:
+            letter_score=0
+
+        if letter_at_curr_pos is not "" or not special_tile:
             word_score = word_score + letter_score
         elif special_tile == "d":
             word_score = word_score +  (2 * letter_score)
@@ -940,16 +942,16 @@ def bestMove(game, letters, blank_tiles):
                             if not letters_to_play: # no letters to play-- word is complete already
                                 continue
 
-                            dirty_board = setWordOnBoard(deepCopyBoard(clean_board), p, w, d)
-                            if validateAllWordsOnBoard(dirty_board, True):
+                            dirty_board = setWordOnBoard(deepCopyBoard(clean_board), p, w, d, game)
+                            if validateAllWordsOnBoard(dirty_board, False):
 
                                 blank_letters_to_play = getBlankLettersToPlay(letters_to_play, letters)
-                                print("blank_letters_to_play: {}".format(blank_letters_to_play))
+                                # print("blank_letters_to_play: {}".format(blank_letters_to_play))
                                 blank_letter_positions = getBlankLetterPositions(blank_letters_to_play, letters_to_play) # for each letter replaced by blank, all of the positions where that blank can be played
-                                print("blank_letter_positions: {}".format(blank_letter_positions))
+                                # print("blank_letter_positions: {}".format(blank_letter_positions))
                                 iterations = getBlankIterations(blank_letter_positions)
-                                print ("iterations: {}".format(iterations))
-                                print("letters_to_play: {}".format(letters_to_play))
+                                # print ("iterations: {}".format(iterations))
+                                # print("letters_to_play: {}".format(letters_to_play))
                     
                                 if not iterations: #no blanks to play this word
                                     score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters, special_tiles, tile_values_dict, blanks_already_played)
