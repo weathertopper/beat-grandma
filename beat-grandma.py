@@ -5,9 +5,19 @@ import string
 import time
 import copy
 
+# GLOBALS
 ALIAS_SHORTHAND="bg"
 LETTER_COUNT_FOR_BINGO=7
 BLANK_FILE_TEMPLATE_FILE_NAME="_blank_tiles_template.csv"
+
+# GLOBALS ONLY USED IN BEST MOVE
+BEST_WORD=""
+BEST_WORD_POSITION=""
+BEST_WORD_DIRECTION=""
+BEST_WORD_BLANK_POSITIONS=[]
+BEST_WORD_SCORE=0
+
+
 # ENVIRONMENT VARIABLE KEYS
 DICTIONARY_DIR_KEY="dictionary_dir"
 ENABLED_WORD_LIST_KEY="enable_word_list_file"
@@ -807,9 +817,55 @@ def getBlankIterationsRecursive(keys, blank_letter_positions):
     # print ("returning iterations: {}".format(iterations))
     return iterations
 
+def decideBestMove(score, word, position, direction, blanks_to_play):
+    global BEST_WORD
+    global BEST_WORD_POSITION
+    global BEST_WORD_DIRECTION
+    global BEST_WORD_BLANK_POSITIONS
+    global BEST_WORD_SCORE
+    if score > BEST_WORD_SCORE or \
+        score == BEST_WORD_SCORE and len(word) > len(BEST_WORD):
+        BEST_WORD_SCORE = score
+        BEST_WORD = word
+        BEST_WORD_POSITION = position
+        BEST_WORD_DIRECTION = direction
+        BEST_WORD_BLANK_POSITIONS = blanks_to_play
+        print("CURRENT BEST WORD: Word {} Position {} Direction {} Score {} Blanks: {}".format(BEST_WORD, BEST_WORD_POSITION, BEST_WORD_DIRECTION, str(BEST_WORD_SCORE), BEST_WORD_BLANK_POSITIONS))
 
+def printBestMove(start_time, end_time, count):
+    global BEST_WORD
+    global BEST_WORD_POSITION
+    global BEST_WORD_DIRECTION
+    global BEST_WORD_BLANK_POSITIONS
+    global BEST_WORD_SCORE
+    print("Best word: " + BEST_WORD)
+    print("Blanks to play: " + str(BEST_WORD_BLANK_POSITIONS))
+    print("Position: " + BEST_WORD_POSITION)
+    print("Direction: " + BEST_WORD_DIRECTION)
+    print("Score: " + str(BEST_WORD_SCORE))
+    print("Total Time: " + str(end_time - start_time))
+    print("Total count: " + str(count))
 
-def bestMove(game, letters, blank_tiles): #TODO
+    command_string = "{} set-word -p {} -d {} -w {}".format(ALIAS_SHORTHAND, BEST_WORD_POSITION, BEST_WORD_DIRECTION, BEST_WORD)
+
+    for blank_pos in BEST_WORD_BLANK_POSITIONS:
+        blank_pos_command = "\n{} set-blank-tile -p {}".format(ALIAS_SHORTHAND, blank_pos)
+        command_string += blank_pos_command
+
+    print (command_string)
+
+# def initGlobals():
+
+#     BEST_WORD=""
+#     BEST_WORD_POSITION=""
+#     BEST_WORD_DIRECTION=""
+#     BEST_WORD_BLANK_POSITIONS=[]
+#     BEST_WORD_SCORE=0
+
+def bestMove(game, letters, blank_tiles): 
+
+    # initGlobals()
+
     letters = list(letters)
     game_valid = validateGame(game)
     letters_valid = validateLetters(letters)
@@ -824,11 +880,11 @@ def bestMove(game, letters, blank_tiles): #TODO
 
     time_start = time.time()
 
-    best_word=""
-    best_word_position=""
-    best_word_direction=""
-    best_word_blank_positions=[]
-    best_word_score=0
+    # best_word=""
+    # best_word_position=""
+    # best_word_direction=""
+    # best_word_blank_positions=[]
+    # best_word_score=0
    
     all_positions = getListOfAllPositions()
     all_directions =  ["horizontal", "vertical"]
@@ -839,6 +895,8 @@ def bestMove(game, letters, blank_tiles): #TODO
     count = 0 # Can remove after TODO
 
     clean_board = readFullBoard(game)
+
+    blanks_already_played = readBlankTilesAsList(game)
 
     word_list =  genericWordListThinning(buildWordList())
 
@@ -882,56 +940,55 @@ def bestMove(game, letters, blank_tiles): #TODO
                             if not letters_to_play: # no letters to play-- word is complete already
                                 continue
 
-
-
-
-                            
-                            blank_letters_to_play = getBlankLettersToPlay(letters_to_play, letters)
-                            blank_letter_positions = getBlankLetterPositions(blank_letters_to_play, letters_to_play) # for each letter replaced by blank, all of the positions where that blank can be played
-                            print("blank_letter_positions: {}".format(blank_letter_positions))
-                            iterations = getBlankIterations(blank_letter_positions)
-                            print ("iterations: {}".format(iterations))
-                            print("letters_to_play: {}".format(letters_to_play))
-
-                            # blanks to play is currently a position, should turn into letter
-                            # then, for each blank that is a letter, have separate function for listing positions where blank can be played
-                            # then loop through those different blank positions and check score
-                            # take getBlanksToPlay out once better blank logic exists
-                            blanks_to_play = getBlanksToPlay(letters_to_play, letters)
                             dirty_board = setWordOnBoard(deepCopyBoard(clean_board), p, w, d)
                             if validateAllWordsOnBoard(dirty_board, True):
-                                blanks_already_played = readBlankTilesAsList(game)
-                                all_blanks_in_play = blanks_to_play + blanks_already_played
-                                score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters, special_tiles, tile_values_dict, all_blanks_in_play)
-                                # print("LOG word {} at position {} in direction {} would score {} points".format(w, p, d, str(score)))
+
+                                blank_letters_to_play = getBlankLettersToPlay(letters_to_play, letters)
+                                print("blank_letters_to_play: {}".format(blank_letters_to_play))
+                                blank_letter_positions = getBlankLetterPositions(blank_letters_to_play, letters_to_play) # for each letter replaced by blank, all of the positions where that blank can be played
+                                print("blank_letter_positions: {}".format(blank_letter_positions))
+                                iterations = getBlankIterations(blank_letter_positions)
+                                print ("iterations: {}".format(iterations))
+                                print("letters_to_play: {}".format(letters_to_play))
+                    
+                                if not iterations: #no blanks to play this word
+                                    score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters, special_tiles, tile_values_dict, blanks_already_played)
+                                    decideBestMove(score,w,p,d,[])
                                 
-                                print("word valid: {} {} {} {}".format(w,p,d,blanks_to_play))
-                                if score > best_word_score or \
-                                    score == best_word_score and len(w) > len(best_word):
-                                    best_word_score = score
-                                    best_word = w
-                                    best_word_position = p
-                                    best_word_direction = d
-                                    best_word_blank_positions = blanks_to_play
-                                    print("CURRENT BEST WORD: Word {} Position {} Direction {} Score {}".format(w, p, d, str(score)))
+                                for blank_iter_string in iterations:
+                                    blank_positions_to_play = blank_iter_string.split(",")
+                                    all_blanks_in_play = blank_positions_to_play + blanks_already_played
+                                    score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters, special_tiles, tile_values_dict, all_blanks_in_play)
+                                    decideBestMove(score,w,p,d,blank_positions_to_play)
+                            
+                                # if score > best_word_score or \
+                                #     score == best_word_score and len(w) > len(best_word):
+                                #     best_word_score = score
+                                #     best_word = w
+                                #     best_word_position = p
+                                #     best_word_direction = d
+                                #     best_word_blank_positions = blanks_to_play
+                                #     print("CURRENT BEST WORD: Word {} Position {} Direction {} Score {}".format(w, p, d, str(score)))
                 count += 1
                 # if count % 1000000 == 0: 
                 #     print ("count {} time since start {} ".format(str(count), str(time.time()- time_start)))
-    print("Best word: " + best_word)
-    print("Blanks to play: " + str(best_word_blank_positions))
-    print("Position: " + best_word_position)
-    print("Direction: " + best_word_direction)
-    print("Score: " + str(best_word_score))
-    print("Total Time: " + str(time.time() - time_start))
-    print("Total count: " + str(count))
+    printBestMove(time_start, time.time(), count)
+    
+    # print("Best word: " + best_word)
+    # print("Blanks to play: " + str(best_word_blank_positions))
+    # print("Position: " + best_word_position)
+    # print("Direction: " + best_word_direction)
+    # print("Score: " + str(best_word_score))
+    # print("Total Time: " + str(time.time() - time_start))
+    # print("Total count: " + str(count))
 
-    command_string = "{} set-word -p {} -d {} -w {}".format(ALIAS_SHORTHAND, best_word_position, best_word_direction, best_word)
+    # command_string = "{} set-word -p {} -d {} -w {}".format(ALIAS_SHORTHAND, best_word_position, best_word_direction, best_word)
 
-    for blank_pos in best_word_blank_positions:
-        blank_pos_command = "\n{} set-blank-tile -p {}".format(ALIAS_SHORTHAND, blank_pos)
-        command_string += blank_pos_command
+    # for blank_pos in best_word_blank_positions:
+    #     blank_pos_command = "\n{} set-blank-tile -p {}".format(ALIAS_SHORTHAND, blank_pos)
+    #     command_string += blank_pos_command
 
-    print (command_string)
+    # print (command_string)
 
 
 # CLI INPUTS
