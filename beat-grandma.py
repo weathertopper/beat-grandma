@@ -558,12 +558,12 @@ def calculateWordScore(clean_board,start_pos, direction, word, special_tiles, ti
         # print("LOG calculateWordScore for loop letter_at_curr_pos: {}".format(letter_at_curr_pos))
         special_tile = lookupSpecialTile(special_tiles, curr_pos)
         # print("LOG calculateWordScore for loop special_tile: {}".format(special_tile))
-        # print("LOG all_blank_positions: {}".forum(all_blank_positions))
+        # print("LOG all_blank_positions: {}".format(all_blank_positions))
         # print("LOG curr_pos: {}".format(curr_pos))
         if curr_pos in all_blank_positions:
             letter_score=0
 
-        if letter_at_curr_pos is not "" or not special_tile:
+        if letter_at_curr_pos is not "" or special_tile == "S" or not special_tile:
             word_score = word_score + letter_score
         elif special_tile == "d":
             word_score = word_score +  (2 * letter_score)
@@ -584,8 +584,10 @@ def calculateWordScore(clean_board,start_pos, direction, word, special_tiles, ti
         # print("LOG calculateWordScore triple_word_count: {}".format(str(triple_word_count)))
         word_score = word_score * triple_word_count * 3
     if double_word_count > 0:
-        # print("LOG calculateWordScore double_word_count: {}".format(str(double_word_count)))
+        # print("LOG calculateWordScore double_word_count: {} default word score: {}".format(str(double_word_count), str(word_score)))
         word_score = word_score * double_word_count * 2
+        # print("LOG calculateWordScore double_word_count: {} doubled word score: {}".format(str(double_word_count), str(word_score)))
+
     # print("LOG calculateWordScore return word_score: {}".format(str(word_score)))
     return word_score
         
@@ -821,6 +823,18 @@ def getBlankIterationsRecursive(keys, blank_letter_positions):
     # print ("returning iterations: {}".format(iterations))
     return iterations
 
+def getStartingPosition(special_tiles):
+    keys = special_tiles.keys()
+    for k in keys:
+        if special_tiles[k] == "S":
+            return k
+    return None
+
+
+def isFirstMove(board, special_tiles):
+    start_pos = getLetterOnBoardAtPosition(board, getStartingPosition(special_tiles))
+    return start_pos == ""
+
 def decideBestMove(score, word, position, direction, blanks_to_play):
     global BEST_WORD
     global BEST_WORD_POSITION
@@ -836,12 +850,21 @@ def decideBestMove(score, word, position, direction, blanks_to_play):
         BEST_WORD_BLANK_POSITIONS = blanks_to_play
         print("CURRENT BEST WORD: Word {} Score {} Blanks: {} Position {} Direction {}".format(BEST_WORD, str(BEST_WORD_SCORE), BEST_WORD_BLANK_POSITIONS, BEST_WORD_POSITION, BEST_WORD_DIRECTION))
 
-def printBestMove(start_time, end_time, count):
+def printBestMove(start_time, end_time, count, first_move):
     global BEST_WORD
     global BEST_WORD_POSITION
     global BEST_WORD_DIRECTION
     global BEST_WORD_BLANK_POSITIONS
     global BEST_WORD_SCORE
+
+    if first_move: # shift positions up
+        for _ in range(len(BEST_WORD)):
+            BEST_WORD_POSITION = positionMoveUp(BEST_WORD_POSITION)
+            shifted_blank_positions = []
+            for bpi in range(len(BEST_WORD_BLANK_POSITIONS)):
+                shifted_blank_positions.append(positionMoveUp(BEST_WORD_BLANK_POSITIONS[bpi]))
+            BEST_WORD_BLANK_POSITIONS = shifted_blank_positions
+
     print("Best word: " + BEST_WORD)
     print("Blanks to play: " + str(BEST_WORD_BLANK_POSITIONS))
     print("Position: " + BEST_WORD_POSITION)
@@ -866,6 +889,7 @@ def printBestMove(start_time, end_time, count):
 #     BEST_WORD_BLANK_POSITIONS=[]
 #     BEST_WORD_SCORE=0
 
+
 def bestMove(game, letters, blank_tiles): 
 
     # initGlobals()
@@ -884,22 +908,29 @@ def bestMove(game, letters, blank_tiles):
 
     time_start = time.time()
 
+    clean_board = readFullBoard(game)
+
     # best_word=""
     # best_word_position=""
     # best_word_direction=""
     # best_word_blank_positions=[]
     # best_word_score=0
-   
-    all_positions = getListOfAllPositions()
-    all_directions =  ["horizontal", "vertical"]
 
     special_tiles=readSpecialTilesAsDict()
+
+    all_positions = getListOfAllPositions()
+
+    all_directions =  ["horizontal", "vertical"]
+
     tile_values_dict=readTileValuesAsDict()
 
     count = 0 # Can remove after TODO
 
-    clean_board = readFullBoard(game)
-
+    first_move = isFirstMove(clean_board, special_tiles)
+    if first_move:
+        all_positions = [getStartingPosition(special_tiles)]
+        all_directions = [all_directions[1]]
+    
     blanks_already_played = readBlankTilesAsList(game)
 
     word_list =  genericWordListThinning(buildWordList())
@@ -925,7 +956,7 @@ def bestMove(game, letters, blank_tiles):
     if not validateAllWordsOnBoard(clean_board, True):
         print("Starting with an invalid board!")
         return
-    
+
     for p in all_positions:
         for d in all_directions:
             # print ("BEST MOVE: position {} direction {}".format(p,d))
@@ -938,7 +969,7 @@ def bestMove(game, letters, blank_tiles):
                     continue
                 if wordFits(clean_board, p, d, w):
                     if wordPlayable(clean_board, letters, p, d, w, blank_tile_count):
-                        if wordConnected(clean_board, letters, p, d, w):
+                        if first_move or wordConnected(clean_board, letters, p, d, w):
                             # figure out where to play blank tiles here?
                             letters_to_play = getLettersPlayed(clean_board, p, d, w)
                             if not letters_to_play: # no letters to play-- word is complete already
@@ -976,7 +1007,7 @@ def bestMove(game, letters, blank_tiles):
                 count += 1
                 # if count % 1000000 == 0: 
                 #     print ("count {} time since start {} ".format(str(count), str(time.time()- time_start)))
-    printBestMove(time_start, time.time(), count)
+    printBestMove(time_start, time.time(), count, first_move)
     
     # print("Best word: " + best_word)
     # print("Blanks to play: " + str(best_word_blank_positions))
