@@ -46,3 +46,6 @@ seq
 apolar
 gi
 vu
+vato
+emo
+oi
