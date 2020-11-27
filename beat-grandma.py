@@ -365,7 +365,6 @@ def printSpecialTiles():
     
 
 def printTileValues():
-    # print ("TILE VALUES")
     tile_values_dict=readTileValuesAsDict()
     for t, v in tile_values_dict.items():
         print(t + " : " + v)
@@ -388,14 +387,9 @@ def buildWordList():
     return full_list
 
 def nextPosition(position, direction):
-    # print("in nextPosition: "+ "position: "+position+ " direction "+direction)
     if directionIsHorizontal(direction):
-        # print("IS HORIZONTAL")
-        # print("positionMoveRight: " + positionMoveRight(position))
         return positionMoveRight(position)
     else:
-        # print("IS VERTICAL")
-        # print("positionMoveDown: " + positionMoveDown(position))
         return positionMoveDown(position)
 
 def previousPosition(position, direction):
@@ -404,90 +398,42 @@ def previousPosition(position, direction):
     else:
         return positionMoveUp(position)  
 
-# NW TAKE OUT THIS UPDATED DEF IT EVERYTHING ENDS UP WORKING
-# Returns True if:
-# Word fits on board (meaning spaces don't run out and spaces aren't already taken)
-# def wordFits(board, letters, position, direction, word, blank_tile_count):
-#     blank_count_copy = copy.deepcopy(blank_tile_count)
-#     curr_pos = position
-#     print("wordFits: {} {} {} {}".format(word, position, direction, blank_count_copy ))
-#     for letter_in_word in word:
-#         print("wordFits: {}".format(curr_pos))
-#         print("letter_in_word: {}".format(letter_in_word))
-#         if not curr_pos:
-#             print("wordFits curr_pos {} DNE".format(curr_pos))
-#             return False
-#         letter_on_board = getLetterOnBoardAtPosition(board, curr_pos)
-#         if letter_on_board == letter_in_word:
-#             print("wordFits letter_on_board {} == letter_in_word {}".format(letter_on_board, letter_in_word ))
-#             curr_pos = nextPosition(curr_pos, direction)
-#         elif letter_on_board == "":
-#             print("wordFits letter_on_board {} is empty".format(letter_on_board, letter_in_word ))
-#             curr_pos = nextPosition(curr_pos, direction)
-#         else:
-#             print("wordFits letter_on_board {} == letter_in_word {} or is empty".format(letter_on_board, letter_in_word ))
-#             if blank_count_copy > 0:
-#                 blank_count_copy = blank_count_copy - 1
-#                 curr_pos = nextPosition(curr_pos, direction)
-#             else:
-#                 return False
-#     return True
-
 # Returns True if:
 # Word fits on board (meaning spaces don't run out and spaces aren't already taken)
 def wordFits(board, position, direction, word):
     curr_pos = position
-    # print("wordFits: {} {} {}".format(word, position, direction ))
     for letter_in_word in word:
-        # print ("wordFits: letter_in_word {} curr_pos {}".format(letter_in_word, curr_pos))
         if not curr_pos:
-            # print("wordFits curr_pos {} DNE".format(curr_pos))
             return False
         letter_on_board = getLetterOnBoardAtPosition(board, curr_pos)
-        # print("wordFits letter_on_board {} ".format(letter_on_board))
         if letter_on_board == letter_in_word or letter_on_board == "":
-            # print("wordFits LETTER FITS! NEXT POS!")
             curr_pos = nextPosition(curr_pos, direction)
         else:
-            # print("wordFits DOESNT FIT! DANGER DANGER!")
             return False
-    # print("wordFits FITS! HURRAY!: {} {} {}".format(word, position, direction ))
     return True
 
 # Returns True if:
 # Word can be played with letters on board AND at least one letter from hand
 def wordPlayable(board, letters, position, direction, word, blank_tile_count): #TODO
-    # print("LOG wordPlayable: word {} letters {} position {} direction {}".format(word, letters, position, direction))
     letters_to_use = copy.deepcopy(letters)
     blanks_available_count = copy.deepcopy(blank_tile_count)
-    # print("LOG wordPlayable: letters_to_use {}".format(letters_to_use))
     used_letters = {}
     blanks_used_count = 0
     curr_pos = position
-    # print("LOG wordPlayable: curr_pos {}".format(curr_pos))
     for letter_in_word in word:
-        # print("LOG wordPlayable: for loop letter_in_word {}".format(letter_in_word))
         letter_on_board = getLetterOnBoardAtPosition(board, curr_pos)
-        # print("LOG wordPlayable: for loop letter_on_board {}".format(letter_on_board))
         if letter_on_board is not "" and letter_on_board is letter_in_word:
             unused = 0
-            # print("LOG wordPlayable: letter_on_baard is not empty")
-            # continue
         elif letter_in_word in letters_to_use:
-            # print("LOG wordPlayable: for loop letter_in_word {} letters_to_use {}".format(letter_in_word, letters_to_use))
             used_letters[curr_pos] = letter_in_word
-            # print("LOG wordPlayable: for loop used_letters {}".format(used_letters))
             letters_to_use.remove(letter_in_word)
-            # print("LOG wordPlayable: for loop letter_in_word {}".format(letter_in_word))
         else:
             if blanks_available_count > 0:
                 blanks_available_count = blanks_available_count -1
                 blanks_used_count = blanks_used_count + 1
             else:
-                # print("LOG wordPlayable: for loop returning false")
                 return False
         curr_pos = nextPosition(curr_pos, direction)
-        # print("LOG wordPlayable: curr pos next pos {}".format(curr_pos))
     return bool(used_letters) or bool(blanks_used_count) # empty dict or 0 gives bool value of False
 
 
@@ -545,21 +491,13 @@ def calculateWordScore(clean_board,start_pos, direction, word, special_tiles, ti
     word_score = 0
     triple_word_count = 0
     double_word_count = 0
-    # print("LOG calculateWordScore word: {} start_pos: {} direction: {}".format(word, start_pos, direction))
     curr_pos = start_pos
-    # print("LOG calculateWordScore curr_pos: {}".format(curr_pos))
     if len(word) is 1: # not a legit word
         return 0
     for letter in word:
-        # print("LOG calculateWordScore for loop letter: {}".format(letter))
         letter_score = int(lookupLetterScore(letter, tile_values_dict))
-        # print("LOG calculateWordScore for loop letter_score: {}".format(letter_score))
         letter_at_curr_pos = getLetterOnBoardAtPosition(clean_board, curr_pos)
-        # print("LOG calculateWordScore for loop letter_at_curr_pos: {}".format(letter_at_curr_pos))
         special_tile = lookupSpecialTile(special_tiles, curr_pos)
-        # print("LOG calculateWordScore for loop special_tile: {}".format(special_tile))
-        # print("LOG all_blank_positions: {}".format(all_blank_positions))
-        # print("LOG curr_pos: {}".format(curr_pos))
         if curr_pos in all_blank_positions:
             letter_score=0
 
@@ -572,71 +510,47 @@ def calculateWordScore(clean_board,start_pos, direction, word, special_tiles, ti
         elif special_tile == "T":
             triple_word_count = triple_word_count +  1
             word_score = word_score + letter_score
-            # print("LOG calculateWordScore for loop triple_word_count: {}".format(str(triple_word_count)))
         elif special_tile == "D":
             double_word_count = double_word_count +  1
             word_score = word_score + letter_score
-            # print("LOG calculateWordScore for loop double_word_count: {}".format(str(double_word_count)))
         curr_pos = nextPosition(curr_pos, direction)
-        # print("LOG calculateWordScore for loop word_score: {}".format(str(word_score)))
-        # print("LOG calculateWordScore for loop curr_pos: {}".format(curr_pos))
     if triple_word_count > 0:
-        # print("LOG calculateWordScore triple_word_count: {}".format(str(triple_word_count)))
         word_score = word_score * triple_word_count * 3
     if double_word_count > 0:
-        # print("LOG calculateWordScore double_word_count: {} default word score: {}".format(str(double_word_count), str(word_score)))
         word_score = word_score * double_word_count * 2
-        # print("LOG calculateWordScore double_word_count: {} doubled word score: {}".format(str(double_word_count), str(word_score)))
 
-    # print("LOG calculateWordScore return word_score: {}".format(str(word_score)))
     return word_score
         
 
 # returns dict of {pos: letter} pairs
 def getLettersPlayed(board, position, direction, word):
     letters_played = dict()
-    # print("Word: {}".format(word))
     curr_pos = position
     for letter in word:
-        # print("Letter: {}".format(letter))
-        # print("curr_pos: {}".format(curr_pos))
         if getLetterOnBoardAtPosition(board, curr_pos) is "":
             letters_played[curr_pos] = letter
-            # print("Playing Letter {} at position {}".format(letter, curr_pos))
         curr_pos = nextPosition(curr_pos, direction)
     return letters_played
 
 def getBlanksToPlay(letters_to_play, letters_in_hand):
     blanks_to_play = []
     letters_in_hand_copy = copy.deepcopy(letters_in_hand)
-    # print ("letters in hand copy: {}".format(letters_in_hand_copy))
-    # print ("letters letters_to_play hand: {}".format(letters_to_play))
     for curr_pos in letters_to_play:
-        # print("curr_pos: {}".format(curr_pos))
-        # print("letters_to_play[curr_pos]: {}".format(letters_to_play[curr_pos]))
         if letters_to_play[curr_pos] in letters_in_hand_copy:
             letters_in_hand_copy.remove(letters_to_play[curr_pos])
         else:
-            # print("APPENDING TO BLANKS TO PLAY")
             blanks_to_play.append(curr_pos)
-    # print ("blanks_to_play: {}".format(blanks_to_play))
     return blanks_to_play
 
 # Returns a list of letters that will be filled by blanks
 def getBlankLettersToPlay(letters_to_play, letters_in_hand):
     blanks_letters_to_play = []
     letters_in_hand_copy = copy.deepcopy(letters_in_hand)
-    # print ("letters in hand copy: {}".format(letters_in_hand_copy))
-    # print ("letters letters_to_play hand: {}".format(letters_to_play))
     for curr_pos in letters_to_play:
-        # print("curr_pos: {}".format(curr_pos))
-        # print("letters_to_play[curr_pos]: {}".format(letters_to_play[curr_pos]))
         if letters_to_play[curr_pos] in letters_in_hand_copy:
             letters_in_hand_copy.remove(letters_to_play[curr_pos])
         else:
-            # print("APPENDING TO BLANKS TO PLAY")
             blanks_letters_to_play.append(letters_to_play[curr_pos])
-    # print ("blanks_letters_to_play: {}".format(blanks_letters_to_play))
     return blanks_letters_to_play
 
 def getBlankLetterPositions(blank_letters_to_play, letters_to_play):
@@ -675,22 +589,13 @@ def getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction):
 
 def calculatePoints(clean_board, dirty_board, start_position, direction, position_letter_dict, letters, special_tiles, tile_values_dict, all_blank_positions):
     total_points = 0
-    # print("LOG calculatePoints start_position: {} direction: {} position_letter_dict: {}".format(start_position, direction, str(position_letter_dict)))
     primary_word = getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction)
-    # print("LOG calculatePoints primary_word: {}".format(primary_word))
     total_points += calculateWordScore(clean_board,start_position,direction, primary_word, special_tiles, tile_values_dict, all_blank_positions)
-    # print("LOG calculatePoints total_points after primary word: {}".format(str(total_points)))
     opposite_direction = getOppositeDirection(direction)
-    # print("LOG calculatePoints opposite_direction : {}".format(str(opposite_direction)))
     for pos in position_letter_dict:
-        # print("LOG calculatePoints in for loop: pos : {}".format(pos))
         first_pos_in_word = getStartPositionOfWordOnBoardAtPositionInDirection(dirty_board, pos, opposite_direction)
-        # print("LOG calculatePoints in for loop: first_pos_in_word : {}".format(first_pos_in_word))
         adjacent_word = getWordOnBoardAtPositionInDirection(dirty_board, first_pos_in_word, opposite_direction)
-        # print("LOG calculatePoints in for loop: adjacent_word : {}".format(adjacent_word))
         total_points = total_points + calculateWordScore(clean_board, first_pos_in_word, opposite_direction, adjacent_word, special_tiles, tile_values_dict, all_blank_positions)
-        # print("LOG calculatePoints in for loop: total_points : {}".format(str(total_points)))
-    # print("LOG calculatePoints returning total_points: {}".format(str(total_points)))
     if len(position_letter_dict) == LETTER_COUNT_FOR_BINGO:
         total_points = total_points + int(os.environ[BINGO_BONUS_KEY])
     return total_points
@@ -708,19 +613,13 @@ def validateAllWordsOnBoard(board, print_errors):
     return True
 
 def genericWordListThinning(word_list):
-    # print("genericWordListThinning start len: {}".format(str(len(word_list))))
     max_len = max(int(os.environ[ROW_LENGTH_KEY]), len(os.environ[POSSIBLE_COLS_KEY]))
     thinned = filter(lambda x: len(x) <= max_len, word_list) # removing words that are too long
-    # print("genericWordListThinning end len: {}".format(str(len(thinned))))
     return thinned
 
-
-# NW PROBLEM HERE__ NOT RETURNING CORRECT SHORTENED LISTS WHEN BLANKS INVOLVED
 def thinWordList(word_list, letters, blank_count):
-    # print("thinWordList:\n word_list: {}\n letters: {}\n blank_count: {}".format(word_list, letters, str(blank_count)))
     possible_len = len(letters) + blank_count
     thinned_by_len = filter(lambda x: len(x) <= possible_len, word_list) 
-    # print( "thinned_by_len: {}".format(thinned_by_len))
     thinned = []
     for word in thinned_by_len:
         letters_copy=copy.deepcopy(letters)
@@ -737,7 +636,6 @@ def thinWordList(word_list, letters, blank_count):
                     break
         if word_possible:
             thinned.append(word)
-    # print("thinWordList: END COUNT {}\n".format(thinned))
     return thinned
             
 
@@ -781,46 +679,33 @@ def getWordsOnBoard(board):
 
 # returns array of comma-separated string positions
 def getBlankIterations(blank_letter_positions):
-    # print ("getBlankIterations blank_letter_positions: {}".format(blank_letter_positions))
     if not blank_letter_positions:
         return []
     keys = blank_letter_positions.keys()
-    # print ("getBlankIterations keys: {}".format(keys))
     iterations = getBlankIterationsRecursive(keys, blank_letter_positions)
     # more math?
     return iterations
 
 def getBlankIterationsRecursive(keys, blank_letter_positions):
-    # print ("getBlankIterationsRecursive keys: {} blank_letter_positions: {}".format(keys,blank_letter_positions))
     keys_copy = copy.deepcopy(keys)
     iterations = []
     if not keys:
-        # print ("getBlankIterationsRecursive NO KEYS, RETURNING EMPTY LIST")
         return iterations
     curr_key = keys_copy[0]
     curr_vals = blank_letter_positions[curr_key]
-    # print ("getBlankIterationsRecursive curr_vals: {} ".format(curr_vals))
     keys_copy.remove(curr_key)
     remaining_keys = copy.deepcopy(keys_copy)
     # exit case.. this seems redundant
     if not remaining_keys:
-        # print("getBlankIterationsRecursive EXIT CASE")
         for val in curr_vals:
             iterations.append(val)
-        # print("getBlankIterationsRecursive EXIT CASE iterations: {}".format(iterations))
         return iterations
 
     for val in curr_vals:
-        # print ("IN CURR_VAL FOR LOOP")
-        # print ("RECUSIVELY CALLING getBlankIterationsRecursive remaining_keys {}".format(remaining_keys))
         next_iterations = getBlankIterationsRecursive(remaining_keys, blank_letter_positions)
-        # print ("next_iterations: {}".format(next_iterations))
         next_iterations = list(map(lambda x : val+","+ x , next_iterations))
-        # print ("next_iterations after lambert: {}".format(next_iterations))
         iterations.extend(next_iterations)
-        # print ("iterations after extending: {}".format(iterations))
     
-    # print ("returning iterations: {}".format(iterations))
     return iterations
 
 def getStartingPosition(special_tiles):
@@ -910,12 +795,6 @@ def bestMove(game, letters, blank_tiles):
 
     clean_board = readFullBoard(game)
 
-    # best_word=""
-    # best_word_position=""
-    # best_word_direction=""
-    # best_word_blank_positions=[]
-    # best_word_score=0
-
     special_tiles=readSpecialTilesAsDict()
 
     all_positions = getListOfAllPositions()
@@ -924,7 +803,7 @@ def bestMove(game, letters, blank_tiles):
 
     tile_values_dict=readTileValuesAsDict()
 
-    count = 0 # Can remove after TODO
+    count = 0
 
     first_move = isFirstMove(clean_board, special_tiles)
     if first_move:
@@ -941,36 +820,29 @@ def bestMove(game, letters, blank_tiles):
         fake_position = buildPosition(char, 1)
         col_letters= getColumnLetters(clean_board, fake_position)
         col_letters.extend(letters)
-        # print("fake_position {} direction {}".format(fake_position, "column" ))
         col_word_lists[char] = thinWordList(word_list, col_letters, blank_tile_count)
     for i in range(int(os.environ[ROW_LENGTH_KEY])):
         row_index = str( i + 1 )
         fake_position = buildPosition(os.environ[POSSIBLE_COLS_KEY][0], row_index)
         row_letters = getRowLetters(clean_board, fake_position)
         row_letters.extend(letters)
-        # print("fake_position {} direction {}".format(fake_position, "row" ))
         row_word_lists[row_index] = thinWordList(word_list, row_letters, blank_tile_count)
 
-    # print ("col_word_lists {}".format(col_word_lists))
-    # print ("row_word_lists {}".format(row_word_lists))
     if not validateAllWordsOnBoard(clean_board, True):
         print("Starting with an invalid board!")
         return
 
     for p in all_positions:
         for d in all_directions:
-            # print ("BEST MOVE: position {} direction {}".format(p,d))
             thinned_word_list = col_word_lists.get(getPositionCol(p))
             if directionIsHorizontal(d):
                 thinned_word_list = row_word_lists.get(str(getPositionRow(p)))
-            # print ("BEST MOVE: thinned_word_list {}".format(thinned_word_list)) 
             for w in thinned_word_list:
                 if w is "":
                     continue
                 if wordFits(clean_board, p, d, w):
                     if wordPlayable(clean_board, letters, p, d, w, blank_tile_count):
                         if first_move or wordConnected(clean_board, letters, p, d, w):
-                            # figure out where to play blank tiles here?
                             letters_to_play = getLettersPlayed(clean_board, p, d, w)
                             if not letters_to_play: # no letters to play-- word is complete already
                                 continue
@@ -979,12 +851,8 @@ def bestMove(game, letters, blank_tiles):
                             if validateAllWordsOnBoard(dirty_board, False):
 
                                 blank_letters_to_play = getBlankLettersToPlay(letters_to_play, letters)
-                                # print("blank_letters_to_play: {}".format(blank_letters_to_play))
                                 blank_letter_positions = getBlankLetterPositions(blank_letters_to_play, letters_to_play) # for each letter replaced by blank, all of the positions where that blank can be played
-                                # print("blank_letter_positions: {}".format(blank_letter_positions))
                                 iterations = getBlankIterations(blank_letter_positions)
-                                # print ("iterations: {}".format(iterations))
-                                # print("letters_to_play: {}".format(letters_to_play))
                     
                                 if not iterations: #no blanks to play this word
                                     score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters, special_tiles, tile_values_dict, blanks_already_played)
@@ -995,36 +863,8 @@ def bestMove(game, letters, blank_tiles):
                                     all_blanks_in_play = blank_positions_to_play + blanks_already_played
                                     score = calculatePoints(clean_board, dirty_board, p, d, letters_to_play, letters, special_tiles, tile_values_dict, all_blanks_in_play)
                                     decideBestMove(score,w,p,d,blank_positions_to_play)
-                            
-                                # if score > best_word_score or \
-                                #     score == best_word_score and len(w) > len(best_word):
-                                #     best_word_score = score
-                                #     best_word = w
-                                #     best_word_position = p
-                                #     best_word_direction = d
-                                #     best_word_blank_positions = blanks_to_play
-                                #     print("CURRENT BEST WORD: Word {} Position {} Direction {} Score {}".format(w, p, d, str(score)))
                 count += 1
-                # if count % 1000000 == 0: 
-                #     print ("count {} time since start {} ".format(str(count), str(time.time()- time_start)))
     printBestMove(time_start, time.time(), count, first_move)
-    
-    # print("Best word: " + best_word)
-    # print("Blanks to play: " + str(best_word_blank_positions))
-    # print("Position: " + best_word_position)
-    # print("Direction: " + best_word_direction)
-    # print("Score: " + str(best_word_score))
-    # print("Total Time: " + str(time.time() - time_start))
-    # print("Total count: " + str(count))
-
-    # command_string = "{} set-word -p {} -d {} -w {}".format(ALIAS_SHORTHAND, best_word_position, best_word_direction, best_word)
-
-    # for blank_pos in best_word_blank_positions:
-    #     blank_pos_command = "\n{} set-blank-tile -p {}".format(ALIAS_SHORTHAND, blank_pos)
-    #     command_string += blank_pos_command
-
-    # print (command_string)
-
 
 # CLI INPUTS
 @click.command()
