@@ -27,6 +27,7 @@ Given a board and a set of in-hand tiles, calculate the word and position of the
 
 ### Algorithmic Functions and Flow
 
+Run `make how-to` before doing anything else.
 
 #### `best-move`
 
@@ -37,10 +38,7 @@ Given a board and a set of in-hand tiles, calculate the word and position of the
 
 ## Unsupported cases
 
-- Opening move (empty board) special case?
-- Blank tile
 - If board has non-legit word set, `best-word` will always return `invalid board` until new word added to list
-- Single games currently separate python file-- refactor into one file
 
 ---
 
@@ -49,7 +47,5 @@ Given a board and a set of in-hand tiles, calculate the word and position of the
 `py beat-grandma.py <command> --game <game> --letters <letters> --position <position> --word <word> --direction <direction>`
 
 ^^ these are all of the flags
-
-Run `make how-to` before doing anything else.
 
 ---
