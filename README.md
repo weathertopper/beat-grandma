@@ -2,6 +2,8 @@
 
 Her reign of terror has gone on long enough. It's time I put a stop to it.
 
+Run `make how-to` before doing anything else.
+
 ## Approach
 
 Given a board and a set of in-hand tiles, calculate the word and position of the word that reaps the most points.
@@ -26,8 +28,6 @@ Given a board and a set of in-hand tiles, calculate the word and position of the
 ---
 
 ### Algorithmic Functions and Flow
-
-Run `make how-to` before doing anything else.
 
 #### `best-move`
 
