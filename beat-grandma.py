@@ -179,7 +179,7 @@ def getColumnLetters(board,position):
     col = getPositionCol(position)
     for i in range(int(os.environ[ROW_LENGTH_KEY])):
         letter = getLetterOnBoardAtPosition(board, buildPosition(col, i+1))
-        if letter is not "":
+        if letter != "":
             column_letters.append(letter)
     return column_letters 
 
@@ -188,7 +188,7 @@ def getRowLetters(board, position):
     row = getPositionRow(position)
     for char in os.environ[POSSIBLE_COLS_KEY]:
         letter = getLetterOnBoardAtPosition(board, buildPosition(char, row))
-        if letter is not "":
+        if letter != "":
             row_letters.append(letter)
     return row_letters 
 
@@ -422,7 +422,7 @@ def wordPlayable(board, letters, position, direction, word, blank_tile_count): #
     curr_pos = position
     for letter_in_word in word:
         letter_on_board = getLetterOnBoardAtPosition(board, curr_pos)
-        if letter_on_board is not "" and letter_on_board is letter_in_word:
+        if letter_on_board != "" and letter_on_board is letter_in_word:
             unused = 0
         elif letter_in_word in letters_to_use:
             used_letters[curr_pos] = letter_in_word
@@ -477,7 +477,7 @@ def buildBoundingBox(board, position, direction, word):
 def wordConnected(board, letters, position, direction, word): #TODO
     connected_positions = buildBoundingBox(board, position, direction, word)
     for pos in connected_positions:
-        if getLetterOnBoardAtPosition(board, pos) is not "":
+        if getLetterOnBoardAtPosition(board, pos) != "":
             return True
     return False
 
@@ -492,7 +492,7 @@ def calculateWordScore(clean_board,start_pos, direction, word, special_tiles, ti
     triple_word_count = 0
     double_word_count = 0
     curr_pos = start_pos
-    if len(word) is 1: # not a legit word
+    if len(word) == 1: # not a legit word
         return 0
     for letter in word:
         letter_score = int(lookupLetterScore(letter, tile_values_dict))
@@ -501,7 +501,7 @@ def calculateWordScore(clean_board,start_pos, direction, word, special_tiles, ti
         if curr_pos in all_blank_positions:
             letter_score=0
 
-        if letter_at_curr_pos is not "" or special_tile == "S" or not special_tile:
+        if letter_at_curr_pos != "" or special_tile == "S" or not special_tile:
             word_score = word_score + letter_score
         elif special_tile == "d":
             word_score = word_score +  (2 * letter_score)
@@ -527,7 +527,7 @@ def getLettersPlayed(board, position, direction, word):
     letters_played = dict()
     curr_pos = position
     for letter in word:
-        if getLetterOnBoardAtPosition(board, curr_pos) is "":
+        if getLetterOnBoardAtPosition(board, curr_pos) == "":
             letters_played[curr_pos] = letter
         curr_pos = nextPosition(curr_pos, direction)
     return letters_played
@@ -568,7 +568,7 @@ def getStartPositionOfWordOnBoardAtPositionInDirection(dirty_board, position, di
     start_position = position
     while previousPosition(start_position, direction):
         prev_pos = previousPosition(start_position, direction)
-        if getLetterOnBoardAtPosition(dirty_board, prev_pos) is not "":
+        if getLetterOnBoardAtPosition(dirty_board, prev_pos) != "":
             start_position = prev_pos
         else:
             return start_position
@@ -578,7 +578,7 @@ def getWordOnBoardAtPositionInDirection(dirty_board, start_position, direction):
     word = ""
     curr_pos = start_position
     while curr_pos: 
-        if getLetterOnBoardAtPosition(dirty_board, curr_pos) is "":
+        if getLetterOnBoardAtPosition(dirty_board, curr_pos) == "":
             break
         word += getLetterOnBoardAtPosition(dirty_board, curr_pos)
         curr_pos = nextPosition(curr_pos, direction)
@@ -618,8 +618,9 @@ def genericWordListThinning(word_list):
     return thinned
 
 def thinWordList(word_list, letters, blank_count):
+    local_word_list = copy.deepcopy(word_list)
     possible_len = len(letters) + blank_count
-    thinned_by_len = filter(lambda x: len(x) <= possible_len, word_list) 
+    thinned_by_len = filter(lambda x: len(x) <= possible_len, local_word_list) 
     thinned = []
     for word in thinned_by_len:
         letters_copy=copy.deepcopy(letters)
@@ -687,7 +688,7 @@ def getBlankIterations(blank_letter_positions):
     return iterations
 
 def getBlankIterationsRecursive(keys, blank_letter_positions):
-    keys_copy = copy.deepcopy(keys)
+    keys_copy = copy.deepcopy(list(keys))
     iterations = []
     if not keys:
         return iterations
@@ -813,7 +814,6 @@ def bestMove(game, letters, blank_tiles):
     blanks_already_played = readBlankTilesAsList(game)
 
     word_list =  genericWordListThinning(buildWordList())
-
     col_word_lists = dict()
     row_word_lists = dict()
     for char in os.environ[POSSIBLE_COLS_KEY]:
@@ -838,7 +838,7 @@ def bestMove(game, letters, blank_tiles):
             if directionIsHorizontal(d):
                 thinned_word_list = row_word_lists.get(str(getPositionRow(p)))
             for w in thinned_word_list:
-                if w is "":
+                if w == "":
                     continue
                 if wordFits(clean_board, p, d, w):
                     if wordPlayable(clean_board, letters, p, d, w, blank_tile_count):
